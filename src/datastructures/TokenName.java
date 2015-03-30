@@ -9,6 +9,7 @@ public enum TokenName {
     DEFAULT,
     EMPTY,
     STATEMENT_NODE,
+    DOLLAR_OPERATOR,
     
     NOTRESWRD,   
     ISINTCONST, ISEOL,

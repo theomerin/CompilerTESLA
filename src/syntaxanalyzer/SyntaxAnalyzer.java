@@ -1,9 +1,6 @@
 package syntaxanalyzer;
 
-import datastructures.Token;
-import datastructures.TokenName;
-import datastructures.ParseTreeNode;
-import datastructures.ParseTree;
+import datastructures.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import lexicalanalyzer.*;
@@ -747,6 +744,46 @@ public class SyntaxAnalyzer {
         return STATEMENT;
     }
     
+    public ParseTree EXPRESSION() throws IOException {
+        LinkedList<ParseTreeNode> expressionInput = new LinkedList<>();
+        LinkedList<ParseTreeNode> expressionStack = new LinkedList<ParseTreeNode>();
+        LinkedList<ParseTreeNode> operandStack = new LinkedList<ParseTreeNode>();
+        OperatorPrecedenceTable precedenceTable = new OperatorPrecedenceTable();
+        ParseTreeNode holder, firstOperand, secondOperand;
+        ParseTree subTree = new ParseTree();
+        ParseTree EXPRESSION = new ParseTree();
+        
+        while (!currentToken.getTokenName().equals(TokenName.EOL)) {
+            expressionInput.offerLast(new ParseTreeNode(currentToken, null, null));
+            ADVANCE();
+        }
+        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
+        expressionStack.push(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
+        
+        while (!expressionInput.isEmpty()) {
+            if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peekLast().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR)) {
+                EXPRESSION.setRoot(operandStack.pop());
+                break;
+            } else if (precedenceTable.evaluatePrecedence(expressionStack.peekLast().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER) || precedenceTable.evaluatePrecedence(expressionStack.peekLast().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
+                expressionStack.push(expressionInput.removeFirst());
+            } else if (precedenceTable.evaluatePrecedence(expressionStack.peekLast().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.GREATER)) {
+                holder = expressionStack.pop();
+                if (holder.getToken().getTokenName().equals(TokenName.CONSINT) || holder.getToken().getTokenName().equals(TokenName.CONSFLOAT) || holder.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
+                    operandStack.push(holder);
+                } 
+                else {
+                    secondOperand = operandStack.pop();
+                    firstOperand = operandStack.pop();
+                    holder.setChildAndSibling(firstOperand, secondOperand);
+                    subTree.setRoot(holder);
+                    operandStack.push(subTree.root);
+                }
+            }
+        }
+        
+        return EXPRESSION;
+    }
+    
     //C:\Users\Theodore Arnel Merin\Documents\sample.txt
     //'ÿ'
     public void sourceScanner(String absPath) throws FileNotFoundException, IOException {
@@ -768,7 +805,7 @@ public class SyntaxAnalyzer {
         System.out.println(ANSI_BLUE + "-----------------------------------------------------------------PARSE TREE-----------------------------------------------------------------" + ANSI_RESET);
         startTime = System.nanoTime();
         currentToken = lex.driver(absPath);
-        ParseTree pTree = PROGRAM();
+        ParseTree pTree = EXPRESSION();
         if (!pTree.root.token.getTokenName().equals(TokenName.ERROR)) {
             System.out.print(pTree.printParseTree());
         }
@@ -786,7 +823,7 @@ public class SyntaxAnalyzer {
         String filePath = "";
         System.out.println("Enter the absolute file path of the source code: ");
         //filePath = console.nextLine();
-        syn.sourceScanner("C:\\Users\\Theodore Arnel Merin\\Documents\\sample6.txt");
+        syn.sourceScanner("C:\\Users\\Theodore Arnel Merin\\Documents\\sample7.txt");
         
         
     }

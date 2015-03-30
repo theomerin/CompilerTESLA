@@ -1,8 +1,6 @@
 package lexicalanalyzer;
 
-import datastructures.Token;
-import datastructures.TokenType;
-import datastructures.TokenName;
+import datastructures.*;
 import java.io.*;
 import static java.lang.Character.*;
 import java.util.HashMap;
