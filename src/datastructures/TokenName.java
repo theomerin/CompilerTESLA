@@ -4,12 +4,17 @@ public enum TokenName {
     
     
     PROGRAM_ROOT,
-    PROGRAM_STMNT,
+    PROGRAM_STMT,
     PROGRAM_BODY,
     DEFAULT,
     EMPTY,
     STATEMENT_NODE,
     DOLLAR_OPERATOR,
+    EXPRESSION,
+    PREINC,
+    PREDEC,
+    POSTINC,
+    POSTDEC,
     
     NOTRESWRD,   
     ISINTCONST, ISEOL,
@@ -107,11 +112,21 @@ public enum TokenName {
     
     //boolean constant
     BOOL_INIT_PRIME, BOOL_INIT, BOOL_ASSIGN, BOOL_VALUE, 
-    
-    
-    NUMERIC_VALUE_NODE, CAST_STMT, INC_PRE_STMT, DEC_PRE_STMT, 
-    CAST_STMT_PRIME, OUTPUT, INC_POST_STMT, DEC_POST_STMT,
-    
     //------//
+    
+    //statement - numeric value 
+    NUMERIC_VALUE_NODE,
+    CAST_STMT,CAST_STMT_PRIME,
+    INC_PRE_STMT, DEC_PRE_STMT, 
+    INC_POST_STMT, DEC_POST_STMT,
+    //------//
+   
+    //IF statement block
+    IF_STMT_PRIME,
+    ELSEIF_STMT,
+    ELSE_STMT,
+    //------//
+    
+    INPUT, OUTPUT,
     
 }
