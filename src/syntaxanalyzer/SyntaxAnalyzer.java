@@ -762,8 +762,9 @@ public class SyntaxAnalyzer {
         
         while (!expressionInput.isEmpty()) {
             if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peekLast().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR)) {
+                
                 EXPRESSION.setRoot(operandStack.pop());
-                break;
+                return EXPRESSION;
             } else if (precedenceTable.evaluatePrecedence(expressionStack.peekLast().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER) || precedenceTable.evaluatePrecedence(expressionStack.peekLast().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
                 expressionStack.push(expressionInput.removeFirst());
             } else if (precedenceTable.evaluatePrecedence(expressionStack.peekLast().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.GREATER)) {
@@ -823,7 +824,7 @@ public class SyntaxAnalyzer {
         String filePath = "";
         System.out.println("Enter the absolute file path of the source code: ");
         //filePath = console.nextLine();
-        syn.sourceScanner("C:\\Users\\Theodore Arnel Merin\\Documents\\sample7.txt");
+        syn.sourceScanner("C:\\Users\\Chris Mary\\Documents\\sampleExp.txt");
         
         
     }
