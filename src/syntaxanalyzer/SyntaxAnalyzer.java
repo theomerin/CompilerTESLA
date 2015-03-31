@@ -744,10 +744,10 @@ public class SyntaxAnalyzer {
         return STATEMENT;
     }
     
-    public ParseTree EXPRESSION() throws IOException {
+    public ParseTree ARITHMETIC_EXPRESSION() throws IOException {
         LinkedList<ParseTreeNode> expressionInput = new LinkedList<>();
-        LinkedList<ParseTreeNode> expressionStack = new LinkedList<ParseTreeNode>();
-        LinkedList<ParseTreeNode> operandStack = new LinkedList<ParseTreeNode>();
+        Stack<ParseTreeNode> expressionStack = new Stack<>();
+        Stack<ParseTreeNode> operandStack = new Stack<>();
         OperatorPrecedenceTable precedenceTable = new OperatorPrecedenceTable();
         ParseTreeNode holder, firstOperand, secondOperand;
         ParseTree subTree = new ParseTree();
@@ -761,23 +761,24 @@ public class SyntaxAnalyzer {
         expressionStack.push(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
         
         while (!expressionInput.isEmpty()) {
-            if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peekLast().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR)) {
-                
+            if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && !operandStack.isEmpty()) {   
                 EXPRESSION.setRoot(operandStack.pop());
                 return EXPRESSION;
-            } else if (precedenceTable.evaluatePrecedence(expressionStack.peekLast().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER) || precedenceTable.evaluatePrecedence(expressionStack.peekLast().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
+            } else if (precedenceTable.evaluatePrecedence(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER) || precedenceTable.evaluatePrecedence(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
                 expressionStack.push(expressionInput.removeFirst());
-            } else if (precedenceTable.evaluatePrecedence(expressionStack.peekLast().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.GREATER)) {
+            } else if (precedenceTable.evaluatePrecedence(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.GREATER)) {
                 holder = expressionStack.pop();
                 if (holder.getToken().getTokenName().equals(TokenName.CONSINT) || holder.getToken().getTokenName().equals(TokenName.CONSFLOAT) || holder.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
                     operandStack.push(holder);
                 } 
                 else {
                     secondOperand = operandStack.pop();
+                    System.out.println(secondOperand.getToken().getLexeme());
                     firstOperand = operandStack.pop();
+                    System.out.println(firstOperand.getToken().getLexeme());
                     holder.setChildAndSibling(firstOperand, secondOperand);
-                    subTree.setRoot(holder);
-                    operandStack.push(subTree.root);
+                    operandStack.push(holder);
+                    System.out.println(operandStack.peek().getToken().getLexeme());
                 }
             }
         }
@@ -806,7 +807,7 @@ public class SyntaxAnalyzer {
         System.out.println(ANSI_BLUE + "-----------------------------------------------------------------PARSE TREE-----------------------------------------------------------------" + ANSI_RESET);
         startTime = System.nanoTime();
         currentToken = lex.driver(absPath);
-        ParseTree pTree = EXPRESSION();
+        ParseTree pTree = ARITHMETIC_EXPRESSION();
         if (!pTree.root.token.getTokenName().equals(TokenName.ERROR)) {
             System.out.print(pTree.printParseTree());
         }
@@ -824,7 +825,7 @@ public class SyntaxAnalyzer {
         String filePath = "";
         System.out.println("Enter the absolute file path of the source code: ");
         //filePath = console.nextLine();
-        syn.sourceScanner("C:\\Users\\Chris Mary\\Documents\\sampleExp.txt");
+        syn.sourceScanner("C:\\Users\\Theodore Arnel Merin\\Documents\\sample7.txt");
         
         
     }
