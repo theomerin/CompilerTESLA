@@ -86,6 +86,7 @@ public enum TokenName {
     //integer constant
     CONSINT,
     NUM_INIT_PRIME, NUM_INIT, NUMERIC_ASSIGN,
+    TO_INT, TO_INTVAL, 
     //------//
     
     //decimal constant
@@ -101,10 +102,16 @@ public enum TokenName {
     //string constant
     CONSSTR,
     STR_INIT_PRIME, STR_INIT, STR_ASSIGN,
+    TO_STR, TO_STRVAL,
     //------//
     
     //boolean constant
-    BOOL_INIT_PRIME, BOOL_INIT, BOOL_ASSIGN, BOOL_VALUE
+    BOOL_INIT_PRIME, BOOL_INIT, BOOL_ASSIGN, BOOL_VALUE, 
+    
+    
+    NUMERIC_VALUE_NODE, CAST_STMT, INC_PRE_STMT, DEC_PRE_STMT, 
+    CAST_STMT_PRIME, OUTPUT, INC_POST_STMT, DEC_POST_STMT,
+    
     //------//
     
 }

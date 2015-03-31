@@ -785,6 +785,409 @@ public class SyntaxAnalyzer {
         return EXPRESSION;
     }
     
+     public ParseTree NUMERIC_VALUE() throws IOException {
+        ParseTreeNode NUMERIC_VALUE_NODE = new ParseTreeNode(new Token(TokenName.NUMERIC_VALUE_NODE, null, null, null, null, 0), null, null); //root node
+        ParseTreeNode NUMERIC_NODE = new ParseTreeNode();
+        ParseTree NUMERIC_VALUE = new ParseTree();
+
+        if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
+            NUMERIC_NODE = makeNode(currentToken); 
+        } else if (currentToken.getTokenName().equals(TokenName.CONSINT)) {
+            NUMERIC_NODE = makeNode(currentToken); 
+	} else if (currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
+            NUMERIC_NODE = makeNode(currentToken); 
+        } else {
+            System.out.println("Error, Token IDENTIFIER/CONSINT/CONSFLOAT not found!");
+            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+        }
+
+        NUMERIC_VALUE_NODE.setFirstChild(NUMERIC_NODE);
+        NUMERIC_VALUE.setRoot(NUMERIC_VALUE_NODE);
+        return NUMERIC_VALUE;
+    }
+     
+     public ParseTree CAST_STMT_PRIME() throws IOException {
+        ParseTreeNode CAST_STMT_PRIME_NODE = new ParseTreeNode(new Token(TokenName.CAST_STMT_PRIME, null, null, null, null, 0), null, null); //root node
+        ParseTreeNode IDENTIFIER = new ParseTreeNode(); 
+        ParseTreeNode ASSIGNOPP = new ParseTreeNode();
+        Token ERROR;
+        ParseTree CAST_STMT = new ParseTree();
+        ParseTree CAST_STMT_PRIME = new ParseTree();
+        
+        if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
+            IDENTIFIER = makeNode(currentToken); 
+            ADVANCE ();
+             if (currentToken.getTokenName().equals(TokenName.ASSIGNOPP)) 
+             {
+                 ASSIGNOPP = makeNode(currentToken); 
+                 ADVANCE ();
+                 CAST_STMT = CAST_STMT();
+             }
+             else {
+            System.out.println("Error, Token ASSIGNOPP not found!");
+            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+             }
+	}  
+        else {
+            System.out.println("Error, Token IDENTIFIER not found!");
+            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+        }
+
+        CAST_STMT_PRIME_NODE.setFirstChild(IDENTIFIER);
+        IDENTIFIER.setNextSibling(ASSIGNOPP);
+        ASSIGNOPP.setNextSibling(CAST_STMT.root);
+        CAST_STMT_PRIME.setRoot(CAST_STMT_PRIME_NODE);
+        return CAST_STMT_PRIME;
+    }
+     
+     public ParseTree CAST_STMT() throws IOException {
+        ParseTreeNode CAST_STMT_NODE = new ParseTreeNode(new Token(TokenName.CAST_STMT, null, null, null, null, 0), null, null); //root node 
+        ParseTree TO_INT = new ParseTree();
+        ParseTree TO_STR = new ParseTree();
+        ParseTreeNode EOL = new ParseTreeNode();
+        Token ERROR;
+        ParseTree CAST_STMT = new ParseTree();
+        
+        switch(currentToken.getTokenName()){
+            case DIGITIZE:
+                TO_INT = TO_INT();
+                CAST_STMT_NODE.setFirstChild(TO_INT.root);
+                TO_INT.root.setNextSibling(EOL);
+                break;
+            case WRITE:
+                TO_STR = TO_STR();
+                CAST_STMT_NODE.setFirstChild(TO_STR.root);
+                TO_STR.root.setNextSibling(EOL);
+                break;
+            default:
+                ERROR = ERROR(TokenName.EOL, currentToken, currentToken.getLineNumber());
+                return new ParseTree(new ParseTreeNode(ERROR, null, null));
+        }
+        CAST_STMT.setRoot(CAST_STMT_NODE);
+        return CAST_STMT;
+    }
+     
+     public ParseTree TO_INT() throws IOException {
+        ParseTreeNode TO_INT_NODE = new ParseTreeNode(new Token(TokenName.TO_INT, null, null, null, null, 0), null, null); //root node
+        ParseTreeNode DIGITIZE = new ParseTreeNode();
+        ParseTreeNode LEFTPAR = new ParseTreeNode();
+        ParseTreeNode RIGHTPAR = new ParseTreeNode();
+        ParseTree TO_INTVAL = new ParseTree(); // first child
+        ParseTree TO_INT = new ParseTree();
+
+        if (currentToken.getTokenName().equals(TokenName.DIGITIZE))
+        {
+            DIGITIZE = makeNode(currentToken);
+            ADVANCE();
+            if (currentToken.getTokenName().equals(TokenName.LEFTPAR))
+            {
+                LEFTPAR = makeNode(currentToken);
+                ADVANCE();
+                TO_INTVAL = TO_INTVAL();
+                ADVANCE();
+                
+                if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) 
+                {
+                    RIGHTPAR = makeNode(currentToken);
+                    ADVANCE();
+                } else {
+                    System.out.println("Error, Token RIGHTPAR not found!");
+                    return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                    }
+            }else {
+                System.out.println("Error, Token LEFTPAR not found!");
+                return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                }
+        }else {
+            System.out.println("Error, Token DIGITIZE not found!");
+            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+        }
+
+        TO_INT_NODE.setFirstChild(DIGITIZE);
+        DIGITIZE.setNextSibling(LEFTPAR);
+        LEFTPAR.setNextSibling(TO_INTVAL.root);
+        TO_INTVAL.root.setNextSibling(RIGHTPAR);
+        TO_INT.setRoot(TO_INT_NODE);
+        return TO_INT;
+    }
+
+     
+     public ParseTree TO_INTVAL() throws IOException {
+        ParseTreeNode TO_INTVAL_NODE = new ParseTreeNode(new Token(TokenName.TO_INTVAL, null, null, null, null, 0), null, null); //root node
+        ParseTreeNode IDENTIFIER = new ParseTreeNode(); 
+        ParseTreeNode CONSSTR = new ParseTreeNode(); 
+        ParseTreeNode CONSCHAR = new ParseTreeNode();
+        Token ERROR;
+        ParseTree TO_INTVAL = new ParseTree();
+
+        switch(currentToken.getTokenName()) {
+            case IDENTIFIER:
+                IDENTIFIER = makeNode(currentToken);
+                TO_INTVAL_NODE.setFirstChild(IDENTIFIER);
+                break;
+            case CONSSTR:
+                CONSSTR = makeNode(currentToken);
+                TO_INTVAL_NODE.setFirstChild(CONSSTR);
+                break;
+            case CONSCHAR:
+                CONSCHAR = makeNode(currentToken);
+                TO_INTVAL_NODE.setFirstChild(CONSCHAR);
+                break;
+            default:
+                ERROR = ERROR(TokenName.EOL, currentToken, currentToken.getLineNumber());
+                return new ParseTree(new ParseTreeNode(ERROR, null, null));
+        }
+        TO_INTVAL.setRoot(TO_INTVAL_NODE);
+        return TO_INTVAL;
+    }
+     
+     public ParseTree TO_STR() throws IOException {
+        ParseTreeNode TO_STR_NODE = new ParseTreeNode(new Token(TokenName.TO_STR, null, null, null, null, 0), null, null); //root node
+        ParseTreeNode WRITE = new ParseTreeNode();
+        ParseTreeNode LEFTPAR = new ParseTreeNode();
+        ParseTreeNode RIGHTPAR = new ParseTreeNode();
+        ParseTree TO_STRVAL = new ParseTree(); // first child
+        ParseTree TO_STR = new ParseTree();
+
+        if (currentToken.getTokenName().equals(TokenName.WRITE))
+        {
+            WRITE = makeNode(currentToken);
+            ADVANCE();
+            if (currentToken.getTokenName().equals(TokenName.LEFTPAR))
+            {
+                LEFTPAR = makeNode(currentToken);
+                ADVANCE();
+                TO_STRVAL = TO_STRVAL();
+                ADVANCE();
+                
+                if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) 
+                {
+                    RIGHTPAR = makeNode(currentToken);
+                    ADVANCE();
+                } else {
+                    System.out.println("Error, Token RIGHTPAR not found!");
+                    return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                    }
+            }else {
+                System.out.println("Error, Token LEFTPAR not found!");
+                return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                }
+        }else {
+            System.out.println("Error, Token WRITE not found!");
+            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+        }
+
+        TO_STR_NODE.setFirstChild(WRITE);
+        WRITE.setNextSibling(LEFTPAR);
+        LEFTPAR.setNextSibling(TO_STRVAL.root);
+        TO_STRVAL.root.setNextSibling(RIGHTPAR);
+        TO_STR.setRoot(TO_STR_NODE);
+        return TO_STR;
+    }
+
+     
+     public ParseTree TO_STRVAL() throws IOException {
+        ParseTreeNode TO_STRVAL_NODE = new ParseTreeNode(new Token(TokenName.TO_STRVAL, null, null, null, null, 0), null, null); //root node
+        ParseTreeNode IDENTIFIER = new ParseTreeNode(); 
+        ParseTreeNode CONSINT = new ParseTreeNode(); 
+        ParseTreeNode CONSFLOAT = new ParseTreeNode();
+        ParseTreeNode CONSBOOL = new ParseTreeNode();
+        Token ERROR;
+        ParseTree TO_STRVAL = new ParseTree();
+
+        switch(currentToken.getTokenName()) {
+            case IDENTIFIER:
+                IDENTIFIER = makeNode(currentToken);
+                TO_STRVAL_NODE.setFirstChild(IDENTIFIER);
+                break;
+            case CONSINT:
+                CONSINT = makeNode(currentToken);
+                TO_STRVAL_NODE.setFirstChild(CONSINT);
+                break;
+            case CONSFLOAT:
+                CONSFLOAT = makeNode(currentToken);
+                TO_STRVAL_NODE.setFirstChild(CONSFLOAT);
+                break;
+            case AFFIRM:
+            case NEGATE:
+                CONSBOOL = makeNode(currentToken);
+                TO_STRVAL_NODE.setFirstChild(CONSBOOL);
+                break;
+            default:
+                ERROR = ERROR(TokenName.EOL, currentToken, currentToken.getLineNumber());
+                return new ParseTree(new ParseTreeNode(ERROR, null, null));
+        }
+        TO_STRVAL.setRoot(TO_STRVAL_NODE);
+        return TO_STRVAL;
+    }
+       public ParseTree OUTPUT() throws IOException {
+        ParseTreeNode OUTPUT_NODE = new ParseTreeNode(new Token(TokenName.OUTPUT, null, null, null, null, 0), null, null); //root node
+        ParseTreeNode TRANSMIT = new ParseTreeNode(); 
+        ParseTreeNode LEFTPAR = new ParseTreeNode();
+        ParseTree EXPRESSION = new ParseTree();
+        ParseTreeNode RIGHTPAR = new ParseTreeNode(); 
+        ParseTreeNode EOL = new ParseTreeNode();
+        ParseTree OUTPUT = new ParseTree();
+        
+        if (currentToken.getTokenName().equals(TokenName.TRANSMIT)) {
+            TRANSMIT = makeNode(currentToken); 
+            ADVANCE ();
+             if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) 
+             {
+                 LEFTPAR = makeNode(currentToken); 
+                 ADVANCE();
+                 EXPRESSION = EXPRESSION();
+                 ADVANCE();
+                    if (currentToken.getTokenName().equals(TokenName.RIGHTPAR))
+                    {
+                        RIGHTPAR = makeNode(currentToken); 
+                        ADVANCE ();
+                    }   
+                    else 
+                    {
+                    System.out.println("Error, Token RIGHTPAR not found!");
+                    return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                    }
+             }
+             else 
+                    {
+                    System.out.println("Error, Token LEFTPAR not found!");
+                    return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                    }
+                   
+        } else if (currentToken.getTokenName().equals(TokenName.EOL)) {
+            EOL = makeNode(currentToken); 
+	}  else {
+            System.out.println("Error, Token TRANSMIT not found!");
+            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+        }
+
+      
+        OUTPUT_NODE.setFirstChild(TRANSMIT);
+        TRANSMIT.setNextSibling(LEFTPAR);
+        LEFTPAR.setNextSibling(RIGHTPAR);
+        RIGHTPAR.setNextSibling(EOL);
+        OUTPUT.setRoot(OUTPUT_NODE);
+        return OUTPUT;
+    }
+       
+     public ParseTree INC_PRE_STMT() throws IOException {
+        ParseTreeNode INC_PRE_STMT_NODE = new ParseTreeNode(new Token(TokenName.INC_PRE_STMT, null, null, null, null, 0), null, null); //root node
+        ParseTreeNode INC = new ParseTreeNode();       
+        ParseTree NUMERIC_VALUE = new ParseTree();
+        ParseTree INC_PRE_STMT = new ParseTree();
+        
+        if (currentToken.getTokenName().equals(TokenName.INC)) {
+            INC = makeNode(currentToken); 
+            ADVANCE ();
+            INC_PRE_STMT = NUMERIC_VALUE();
+	}  else {
+            System.out.println("Error, Token INC not found!");
+            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+        }
+
+      
+        INC_PRE_STMT_NODE.setFirstChild(INC);
+        INC.setNextSibling(NUMERIC_VALUE.root);      
+        INC_PRE_STMT.setRoot(INC_PRE_STMT_NODE);
+        return INC_PRE_STMT;
+    }
+     public ParseTree INC_POST_STMT() throws IOException {
+        ParseTreeNode INC_POST_STMT_NODE = new ParseTreeNode(new Token(TokenName.INC_POST_STMT, null, null, null, null, 0), null, null); //root node
+        ParseTree NUMERIC_VALUE = new ParseTree();       
+        ParseTreeNode INC = new ParseTreeNode();
+        ParseTree INC_POST_STMT = new ParseTree();
+        
+        INC_POST_STMT = NUMERIC_VALUE();
+        ADVANCE();
+        if (currentToken.getTokenName().equals(TokenName.INC)) {
+            INC = makeNode(currentToken); 
+        }  else {
+            System.out.println("Error, Token INC not found!");
+            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+        }
+
+      
+        INC_POST_STMT_NODE.setFirstChild(NUMERIC_VALUE.root);
+        NUMERIC_VALUE.root.setNextSibling(INC);      
+        return INC_POST_STMT;
+    }
+        public ParseTree DEC_PRE_STMT() throws IOException {
+        ParseTreeNode DEC_PRE_STMT_NODE = new ParseTreeNode(new Token(TokenName.DEC_PRE_STMT, null, null, null, null, 0), null, null); //root node
+        ParseTreeNode DEC = new ParseTreeNode();       
+        ParseTree NUMERIC_VALUE = new ParseTree();
+        //Token ERROR;
+        ParseTree DEC_PRE_STMT = new ParseTree();
+        
+        if (currentToken.getTokenName().equals(TokenName.DEC)) {
+            DEC = makeNode(currentToken); 
+            ADVANCE ();
+            DEC_PRE_STMT = NUMERIC_VALUE();
+	}  else {
+            System.out.println("Error, Token INC not found!");
+            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+        }
+
+      
+        DEC_PRE_STMT_NODE.setFirstChild(DEC);
+        DEC.setNextSibling(NUMERIC_VALUE.root);      
+        DEC_PRE_STMT.setRoot(DEC_PRE_STMT_NODE);
+        return DEC_PRE_STMT;
+    }
+       public ParseTree DEC_POST_STMT() throws IOException {
+        ParseTreeNode DEC_POST_STMT_NODE = new ParseTreeNode(new Token(TokenName.DEC_POST_STMT, null, null, null, null, 0), null, null); //root node
+        ParseTree NUMERIC_VALUE = new ParseTree();       
+        ParseTreeNode DEC = new ParseTreeNode();
+        ParseTree DEC_POST_STMT = new ParseTree();
+        
+        DEC_POST_STMT = NUMERIC_VALUE();
+        ADVANCE();
+        if (currentToken.getTokenName().equals(TokenName.DEC)) {
+            DEC = makeNode(currentToken); 
+        }  else {
+            System.out.println("Error, Token DEC not found!");
+            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+        }
+
+      
+        DEC_POST_STMT_NODE.setFirstChild(NUMERIC_VALUE.root);
+        NUMERIC_VALUE.root.setNextSibling(DEC);      
+        return DEC_POST_STMT;
+    }  
+      public ParseTree INPUT() throws IOException {
+        ParseTreeNode INPUT_NODE = new ParseTreeNode(new Token(TokenName.CAST_STMT, null, null, null, null, 0), null, null); //root node
+        ParseTreeNode RECEIVE = new ParseTreeNode(); 
+        ParseTreeNode IDENTIFIER = new ParseTreeNode(); 
+        ParseTreeNode EOL = new ParseTreeNode();
+        ParseTree INPUT = new ParseTree();
+        
+        if (currentToken.getTokenName().equals(TokenName.RECEIVE)) {
+            RECEIVE = makeNode(currentToken); 
+            ADVANCE ();
+             if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) 
+             {
+                 IDENTIFIER = makeNode(currentToken); 
+                 ADVANCE ();                                 
+             }
+             else 
+                    {
+                    System.out.println("Error, Token IDENTIFIER not found!");
+                    return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                    }
+        } else if (currentToken.getTokenName().equals(TokenName.EOL)) {
+            EOL = makeNode(currentToken); 
+	}  else {
+            System.out.println("Error, Token RECEIVE not found!");
+            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+        }
+
+      
+        INPUT_NODE.setFirstChild(RECEIVE);
+        RECEIVE.setNextSibling(IDENTIFIER);
+        IDENTIFIER.setNextSibling(EOL);
+        INPUT.setRoot(INPUT_NODE);
+        return INPUT;
+    }
     //C:\Users\Theodore Arnel Merin\Documents\sample.txt
     //'ÿ'
     public void sourceScanner(String absPath) throws FileNotFoundException, IOException {
@@ -806,10 +1209,10 @@ public class SyntaxAnalyzer {
         System.out.println(ANSI_BLUE + "-----------------------------------------------------------------PARSE TREE-----------------------------------------------------------------" + ANSI_RESET);
         startTime = System.nanoTime();
         currentToken = lex.driver(absPath);
-        ParseTree pTree = EXPRESSION();
-        if (!pTree.root.token.getTokenName().equals(TokenName.ERROR)) {
-            System.out.print(pTree.printParseTree());
-        }
+//        ParseTree pTree = EXPRESSION();
+//        if (!pTree.root.token.getTokenName().equals(TokenName.ERROR)) {
+//            System.out.print(pTree.printParseTree());
+//        }
         estimatedTime = System.nanoTime() - startTime;
         System.out.println();
         System.out.println(ANSI_GREEN + "PARSING COMPLETE");
@@ -827,5 +1230,6 @@ public class SyntaxAnalyzer {
         syn.sourceScanner("C:\\Users\\Chris Mary\\Documents\\sampleExp.txt");
         
         
+                
     }
 }
