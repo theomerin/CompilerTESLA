@@ -10,6 +10,11 @@ public enum TokenName {
     EMPTY,
     STATEMENT_NODE,
     DOLLAR_OPERATOR,
+    EXPRESSION,
+    PREINC,
+    PREDEC,
+    POSTINC,
+    POSTDEC,
     
     NOTRESWRD,   
     ISINTCONST, ISEOL,

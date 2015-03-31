@@ -23,6 +23,10 @@ public class OperatorPrecedenceTable {
                     case IDENTIFIER:
                     case CONSINT:
                     case CONSFLOAT:
+                    case PREINC:
+                    case PREDEC:
+                    case POSTINC:
+                    case POSTDEC:
                         return OperatorPrecedence.LESSER;
                 }
                 break;
@@ -43,6 +47,10 @@ public class OperatorPrecedenceTable {
                     case IDENTIFIER:
                     case CONSINT:
                     case CONSFLOAT:
+                    case PREINC:
+                    case PREDEC:
+                    case POSTINC:
+                    case POSTDEC:
                         return OperatorPrecedence.LESSER;
                 }
                 break;
@@ -61,6 +69,10 @@ public class OperatorPrecedenceTable {
                     case IDENTIFIER:
                     case CONSINT:
                     case CONSFLOAT:
+                    case PREINC:
+                    case PREDEC:
+                    case POSTINC:
+                    case POSTDEC:
                         return OperatorPrecedence.LESSER;
                 }
                 break;
@@ -76,6 +88,10 @@ public class OperatorPrecedenceTable {
                     case IDENTIFIER:
                     case CONSINT:
                     case CONSFLOAT:
+                    case PREINC:
+                    case PREDEC:
+                    case POSTINC:
+                    case POSTDEC:
                         return OperatorPrecedence.LESSER;
                     case RIGHTPAR:
                         return OperatorPrecedence.EQUAL;
@@ -87,6 +103,10 @@ public class OperatorPrecedenceTable {
             case IDENTIFIER:
             case CONSINT:
             case CONSFLOAT:
+            case PREINC:
+            case PREDEC:
+            case POSTINC:
+            case POSTDEC:
                 switch(current) {
                     case SUM:
                     case DIFF:
@@ -101,6 +121,10 @@ public class OperatorPrecedenceTable {
                     case IDENTIFIER:
                     case CONSINT:
                     case CONSFLOAT:
+                    case PREINC:
+                    case PREDEC:
+                    case POSTINC:
+                    case POSTDEC:
                         return OperatorPrecedence.ERROR;
                 }
                 break;
@@ -116,6 +140,10 @@ public class OperatorPrecedenceTable {
                     case IDENTIFIER:
                     case CONSINT:
                     case CONSFLOAT:
+                    case PREINC:
+                    case PREDEC:
+                    case POSTINC:
+                    case POSTDEC:
                         return OperatorPrecedence.LESSER;
                     case RIGHTPAR:
                     case DOLLAR_OPERATOR:
