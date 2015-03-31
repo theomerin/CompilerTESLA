@@ -764,22 +764,21 @@ public class SyntaxAnalyzer {
             if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && !operandStack.isEmpty()) {   
                 EXPRESSION.setRoot(operandStack.pop());
                 return EXPRESSION;
-            } else if (precedenceTable.evaluatePrecedence(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER) || precedenceTable.evaluatePrecedence(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
+            } else if (precedenceTable.evaluatePrecedence(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER)) {
                 expressionStack.push(expressionInput.removeFirst());
             } else if (precedenceTable.evaluatePrecedence(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.GREATER)) {
                 holder = expressionStack.pop();
                 if (holder.getToken().getTokenName().equals(TokenName.CONSINT) || holder.getToken().getTokenName().equals(TokenName.CONSFLOAT) || holder.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
                     operandStack.push(holder);
-                } 
-                else {
+                } else {
                     secondOperand = operandStack.pop();
-                    System.out.println(secondOperand.getToken().getLexeme());
                     firstOperand = operandStack.pop();
-                    System.out.println(firstOperand.getToken().getLexeme());
                     holder.setChildAndSibling(firstOperand, secondOperand);
                     operandStack.push(holder);
-                    System.out.println(operandStack.peek().getToken().getLexeme());
                 }
+            } else if (precedenceTable.evaluatePrecedence(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
+                expressionStack.pop();
+                expressionInput.removeFirst();
             }
         }
         
