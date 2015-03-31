@@ -772,9 +772,9 @@ public class SyntaxAnalyzer {
             if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && !operandStack.isEmpty()) {   
                 EXPRESSION.setRoot(operandStack.pop());
                 return EXPRESSION;
-            } else if (precedenceTable.evaluatePrecedence(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER)) {
+            } else if (precedenceTable.evaluatePrecedenceArithmetic(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER)) {
                 expressionStack.push(expressionInput.removeFirst());
-            } else if (precedenceTable.evaluatePrecedence(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.GREATER)) {
+            } else if (precedenceTable.evaluatePrecedenceArithmetic(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.GREATER)) {
                 holder = expressionStack.pop();
                 if (holder.getToken().getTokenName().equals(TokenName.CONSINT) || holder.getToken().getTokenName().equals(TokenName.CONSFLOAT) || holder.getToken().getTokenName().equals(TokenName.IDENTIFIER) || holder.getToken().getTokenName().equals(TokenName.PREINC) || holder.getToken().getTokenName().equals(TokenName.PREDEC) || holder.getToken().getTokenName().equals(TokenName.POSTINC) || holder.getToken().getTokenName().equals(TokenName.POSTDEC)) {
                     operandStack.push(holder);
@@ -784,7 +784,7 @@ public class SyntaxAnalyzer {
                     holder.setChildAndSibling(firstOperand, secondOperand);
                     operandStack.push(holder);
                 }
-            } else if (precedenceTable.evaluatePrecedence(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
+            } else if (precedenceTable.evaluatePrecedenceArithmetic(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
                 expressionStack.pop();
                 expressionInput.removeFirst();
             }
@@ -1480,7 +1480,5 @@ public class SyntaxAnalyzer {
         System.out.println("Enter the absolute file path of the source code: ");
         //filePath = console.nextLine();
         syn.sourceScanner("C:\\Users\\Theodore Arnel Merin\\Documents\\sample6.txt");
-        
-                
     }
 }

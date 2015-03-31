@@ -5,7 +5,7 @@ public class OperatorPrecedenceTable {
     public OperatorPrecedenceTable() {
         
     }
-    public OperatorPrecedence evaluatePrecedence(TokenName previous, TokenName current) {
+    public OperatorPrecedence evaluatePrecedenceArithmetic(TokenName previous, TokenName current) {
         switch(previous) {
             case SUM:
             case DIFF:
