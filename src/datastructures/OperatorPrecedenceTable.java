@@ -30,6 +30,7 @@ public class OperatorPrecedenceTable {
                     case NEGINT:
                     case NEGFLOAT:
                     case NEGIDENTIFIER:
+                    case NEGEXP_ROOT:
                         return OperatorPrecedence.LESSER;
                 }
                 break;
@@ -57,6 +58,7 @@ public class OperatorPrecedenceTable {
                     case NEGINT:
                     case NEGFLOAT:
                     case NEGIDENTIFIER:
+                    case NEGEXP_ROOT:
                         return OperatorPrecedence.LESSER;
                 }
                 break;
@@ -82,6 +84,7 @@ public class OperatorPrecedenceTable {
                     case NEGINT:
                     case NEGFLOAT:
                     case NEGIDENTIFIER:
+                    case NEGEXP_ROOT:
                         return OperatorPrecedence.LESSER;
                 }
                 break;
@@ -104,6 +107,7 @@ public class OperatorPrecedenceTable {
                     case NEGINT:
                     case NEGFLOAT:
                     case NEGIDENTIFIER:
+                    case NEGEXP_ROOT:
                         return OperatorPrecedence.LESSER;
                     case RIGHTPAR:
                         return OperatorPrecedence.EQUAL;
@@ -122,6 +126,7 @@ public class OperatorPrecedenceTable {
             case NEGINT:
             case NEGFLOAT:
             case NEGIDENTIFIER:
+            case NEGEXP_ROOT:
                 switch(current) {
                     case SUM:
                     case DIFF:
@@ -143,6 +148,7 @@ public class OperatorPrecedenceTable {
                     case NEGINT:
                     case NEGFLOAT:
                     case NEGIDENTIFIER:
+                    case NEGEXP_ROOT:
                         return OperatorPrecedence.ERROR;
                 }
                 break;
@@ -165,6 +171,7 @@ public class OperatorPrecedenceTable {
                     case NEGINT:
                     case NEGFLOAT:
                     case NEGIDENTIFIER:
+                    case NEGEXP_ROOT:
                         return OperatorPrecedence.LESSER;
                     case RIGHTPAR:
                     case DOLLAR_OPERATOR:
