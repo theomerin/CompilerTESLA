@@ -25,7 +25,7 @@ public class SyntaxAnalyzer {
     public Token ERROR(TokenName expectedToken, Token currentToken, int lineNumber) {
         String ANSI_RED = "\u001B[31m";
         String ANSI_RESET = "\u001B[0m";
-        System.out.println(ANSI_RED + "PARSING NOT SUCESSFUL: Token Expected: " + expectedToken + ". Token Found at line number (" + lineNumber + "): " + currentToken.getTokenName() + " Lexeme of: " + currentToken.getLexeme());
+        System.out.println(ANSI_RED + "PARSING NOT SUCCESSFUL: Token Expected: " + expectedToken + ". Token Found at line number (" + lineNumber + "): " + currentToken.getTokenName() + " Lexeme of: " + currentToken.getLexeme());
         System.out.print(ANSI_RESET);
         return new Token(TokenName.ERROR, null, null, null, null, lineNumber);
     }
@@ -842,22 +842,52 @@ public class SyntaxAnalyzer {
     }
 
     public ParseTree STATEMENT() throws IOException {
-        ParseTree STATEMENT = new ParseTree();
+        ParseTree STATEMENT = new ParseTree(new ParseTreeNode(new Token(TokenName.EMPTY, null, null, null, null, 0), null, null));
+        ParseTree STATEMENT_LOOP = new ParseTree(new ParseTreeNode(new Token(TokenName.EMPTY, null, null, null, null, 0), null, null));
+        ParseTreeNode EOL = new ParseTreeNode();
 
         switch (currentToken.getTokenName()) {
             case IDENTIFIER:
                 //Prioritize IDENTIFIER of CAST_STMT_PRIME() over INC_POST_STMT and DEC_POST_STMT
                 STATEMENT = CAST_STMT_PRIME();
                 ADVANCE();
+                STATEMENT_LOOP = STATEMENT();
+                if (!STATEMENT_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                    STATEMENT.root.setNextSibling(STATEMENT_LOOP.root);
+                }
                 return STATEMENT;
             case INC:
                 STATEMENT = INC_PRE_STMT();
                 ADVANCE();
-                return STATEMENT;
+                if (currentToken.getTokenName().equals(TokenName.EOL)) {
+                    EOL = makeNode(currentToken);
+                    ADVANCE();
+                    STATEMENT_LOOP = STATEMENT();
+                    if (!STATEMENT_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                        EOL.setNextSibling(STATEMENT_LOOP.root);
+                    }
+                    STATEMENT.root.setNextSibling(EOL);
+                    return STATEMENT;
+                } else {
+                    System.out.println("Error, Token EOL not found!");
+                    return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                }
             case DEC:
                 STATEMENT = DEC_PRE_STMT();
                 ADVANCE();
-                return STATEMENT;
+                if (currentToken.getTokenName().equals(TokenName.EOL)) {
+                    EOL = makeNode(currentToken);
+                    ADVANCE();
+                    STATEMENT_LOOP = STATEMENT();
+                    if (!STATEMENT_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                        EOL.setNextSibling(STATEMENT_LOOP.root);
+                    }
+                    STATEMENT.root.setNextSibling(EOL);
+                    return STATEMENT;
+                } else {
+                    System.out.println("Error, Token EOL not found!");
+                    return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                }
             case IF:
                 STATEMENT = IF_STMT_PRIME();
                 ADVANCE();
@@ -869,6 +899,10 @@ public class SyntaxAnalyzer {
             case RECEIVE:
                 STATEMENT = INPUT();
                 ADVANCE();
+                STATEMENT_LOOP = STATEMENT();
+                if (!STATEMENT_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                    STATEMENT.root.setNextSibling(STATEMENT_LOOP.root);
+                }
                 return STATEMENT;
             default:
                 return STATEMENT;
@@ -916,14 +950,28 @@ public class SyntaxAnalyzer {
         switch (currentToken.getTokenName()) {
             case DIGITIZE:
                 TO_INT = TO_INT();
-                CAST_STMT_NODE.setFirstChild(TO_INT.root);
-                TO_INT.root.setNextSibling(EOL);
-                break;
+                ADVANCE();
+                if (currentToken.getTokenName().equals(TokenName.EOL)) {
+                    EOL = makeNode(currentToken);
+                    CAST_STMT_NODE.setFirstChild(TO_INT.root);
+                    TO_INT.root.setNextSibling(EOL);
+                    break;
+                } else {
+                    ERROR = ERROR(TokenName.EOL, currentToken, currentToken.getLineNumber());
+                    return new ParseTree(new ParseTreeNode(ERROR, null, null));
+                }
             case WRITE:
                 TO_STR = TO_STR();
-                CAST_STMT_NODE.setFirstChild(TO_STR.root);
-                TO_STR.root.setNextSibling(EOL);
-                break;
+                ADVANCE();
+                if (currentToken.getTokenName().equals(TokenName.EOL)) {
+                    EOL = makeNode(currentToken);
+                    CAST_STMT_NODE.setFirstChild(TO_STR.root);
+                    TO_STR.root.setNextSibling(EOL);
+                    break;
+                } else {
+                    ERROR = ERROR(TokenName.EOL, currentToken, currentToken.getLineNumber());
+                    return new ParseTree(new ParseTreeNode(ERROR, null, null));
+                }
             default:
                 ERROR = ERROR(TokenName.EOL, currentToken, currentToken.getLineNumber());
                 return new ParseTree(new ParseTreeNode(ERROR, null, null));
@@ -948,7 +996,6 @@ public class SyntaxAnalyzer {
                 ADVANCE();
                 TO_INTVAL = TO_INTVAL();
                 ADVANCE();
-
                 if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) {
                     RIGHTPAR = makeNode(currentToken);
                     ADVANCE();
@@ -1163,6 +1210,7 @@ public class SyntaxAnalyzer {
 
     public ParseTree IF_STMT_PRIME() throws IOException {
         ParseTreeNode IF_STMT_PRIME_NODE = new ParseTreeNode(new Token(TokenName.IF_STMT_PRIME, null, null, null, null, 0), null, null); //root node
+        ParseTree PROG_BODY_LOOP = new ParseTree(new ParseTreeNode(new Token(TokenName.EMPTY, null, null, null, null, 0), null, null));
         ParseTreeNode IF = new ParseTreeNode();
         ParseTreeNode LEFTPAR = new ParseTreeNode();
         ParseTreeNode LEFTBRACE = new ParseTreeNode();
@@ -1171,7 +1219,6 @@ public class SyntaxAnalyzer {
         ParseTree RegExp = new ParseTree();
         ParseTree IF_STMT_PRIME = new ParseTree();
         ParseTree IF_STMT = new ParseTree();
-        ParseTree PROGRAM_BODY = new ParseTree();
 
         if (currentToken.getTokenName().equals(TokenName.IF)) {
             IF = makeNode(currentToken);
@@ -1188,11 +1235,18 @@ public class SyntaxAnalyzer {
                     if (currentToken.getTokenName().equals(TokenName.LEFTBRACE)) {
                         LEFTBRACE = makeNode(currentToken);
                         ADVANCE();
-                        PROGRAM_BODY = PROG_BODY();
-                        ADVANCE();
+                        PROG_BODY_LOOP = PROG_BODY();
+                        if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                            LEFTBRACE.setNextSibling(PROG_BODY_LOOP.root);
+                        }
                         if (currentToken.getTokenName().equals(TokenName.RIGHTBRACE)) {
                             RIGHTBRACE = makeNode(currentToken);
                             ADVANCE();
+                            if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                                PROG_BODY_LOOP.root.setNextSibling(RIGHTBRACE);
+                            } else {
+                                LEFTBRACE.setNextSibling(RIGHTBRACE);
+                            }
                             IF_STMT = IF_STMT();
                         } else {
                             System.out.println("Error, Token RIGHTBRACE not found!");
@@ -1222,8 +1276,6 @@ public class SyntaxAnalyzer {
         //RegExp.root.setNextSibling(RIGHTPAR);
         LEFTPAR.setNextSibling(RIGHTPAR); // remove this if there's RegExp
         RIGHTPAR.setNextSibling(LEFTBRACE);
-        LEFTBRACE.setNextSibling(PROGRAM_BODY.root);
-        PROGRAM_BODY.root.setNextSibling(RIGHTBRACE);
         RIGHTBRACE.setNextSibling(IF_STMT.root);
         IF_STMT_PRIME.setRoot(IF_STMT_PRIME_NODE);
         return IF_STMT_PRIME;
@@ -1232,6 +1284,8 @@ public class SyntaxAnalyzer {
     public ParseTree IF_STMT() throws IOException {
         ParseTree ELSEIF_STMT = new ParseTree();
         ParseTree ELSE_STMT = new ParseTree();
+        ParseTree ENDIF_STMT = new ParseTree();
+        ParseTreeNode ENDIF = new ParseTreeNode();
         ParseTree Empty = new ParseTree();
 
         switch (currentToken.getTokenName()) {
@@ -1241,16 +1295,21 @@ public class SyntaxAnalyzer {
                 return ELSEIF_STMT;
             case ELSE:
                 ELSE_STMT = ELSE_STMT();
-                ADVANCE();
                 return ELSE_STMT;
+            case ENDIF:
+                System.out.println("Inside ENDIF, token is: ^^^^^ " + currentToken.getTokenName() + "^^^");
+                ENDIF = makeNode(currentToken);
+                ENDIF_STMT.root.setFirstChild(ENDIF);
+                ADVANCE();
+                return ENDIF_STMT;
             default:
                 return Empty;
         }
-
     }
 
     public ParseTree ELSEIF_STMT() throws IOException {
         ParseTreeNode ELSEIF_STMT_NODE = new ParseTreeNode(new Token(TokenName.ELSEIF_STMT, null, null, null, null, 0), null, null); //root node
+        ParseTree PROG_BODY_LOOP = new ParseTree(new ParseTreeNode(new Token(TokenName.EMPTY, null, null, null, null, 0), null, null));
         ParseTreeNode ELSEIF = new ParseTreeNode();
         ParseTreeNode LEFTPAR = new ParseTreeNode();
         ParseTreeNode RIGHTPAR = new ParseTreeNode();
@@ -1258,7 +1317,6 @@ public class SyntaxAnalyzer {
         ParseTreeNode RIGHTBRACE = new ParseTreeNode();
         ParseTree ELSE_STMT = new ParseTree();
         ParseTree ELSEIF_STMT = new ParseTree();
-        ParseTree PROGRAM_BODY = new ParseTree();
 
         if (currentToken.getTokenName().equals(TokenName.ELSEIF)) {
             ELSEIF = makeNode(currentToken);
@@ -1277,12 +1335,20 @@ public class SyntaxAnalyzer {
                     if (currentToken.getTokenName().equals(TokenName.LEFTBRACE)) {
                         LEFTBRACE = makeNode(currentToken);
                         ADVANCE();
-                        PROGRAM_BODY = PROG_BODY();
-                        ADVANCE();
+                        PROG_BODY_LOOP = PROG_BODY();
+                        if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                            LEFTBRACE.setNextSibling(PROG_BODY_LOOP.root);
+                            PROG_BODY_LOOP.root.setNextSibling(RIGHTBRACE);
+                        }
 
                         if (currentToken.getTokenName().equals(TokenName.RIGHTBRACE)) {
                             RIGHTBRACE = makeNode(currentToken);
                             ADVANCE();
+                            if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                                PROG_BODY_LOOP.root.setNextSibling(RIGHTBRACE);
+                            } else {
+                                LEFTBRACE.setNextSibling(RIGHTBRACE);
+                            }
                             ELSE_STMT = ELSE_STMT();
                         } else {
                             System.out.println("Error, Token RIGHTBRACE not found!");
@@ -1316,8 +1382,6 @@ public class SyntaxAnalyzer {
         //RegExp.root.setNextSibling(RIGHTPAR);
         LEFTPAR.setNextSibling(RIGHTPAR); // remove this if there's RegExp
         RIGHTPAR.setNextSibling(LEFTBRACE);
-        LEFTBRACE.setNextSibling(PROGRAM_BODY.root);
-        PROGRAM_BODY.root.setNextSibling(RIGHTBRACE);
         RIGHTBRACE.setNextSibling(ELSE_STMT.root);
         ELSEIF_STMT.setRoot(ELSEIF_STMT_NODE);
         return ELSEIF_STMT;
@@ -1325,10 +1389,11 @@ public class SyntaxAnalyzer {
 
     public ParseTree ELSE_STMT() throws IOException {
         ParseTreeNode ELSE_STMT_NODE = new ParseTreeNode(new Token(TokenName.ELSE_STMT, null, null, null, null, 0), null, null); //root node
+        ParseTree PROG_BODY_LOOP = new ParseTree(new ParseTreeNode(new Token(TokenName.EMPTY, null, null, null, null, 0), null, null));
         ParseTreeNode ELSE = new ParseTreeNode();
         ParseTreeNode LEFTBRACE = new ParseTreeNode();
-        ParseTree STATEMENT = new ParseTree();
         ParseTreeNode RIGHTBRACE = new ParseTreeNode();
+        ParseTreeNode ENDIF = new ParseTreeNode();
         ParseTree ELSE_STMT = new ParseTree();
 
         if (currentToken.getTokenName().equals(TokenName.ELSE)) {
@@ -1337,12 +1402,26 @@ public class SyntaxAnalyzer {
             if (currentToken.getTokenName().equals(TokenName.LEFTBRACE)) {
                 LEFTBRACE = makeNode(currentToken);
                 ADVANCE();
-                STATEMENT = STATEMENT();
-                ADVANCE();
+                PROG_BODY_LOOP = PROG_BODY();
+                if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                    LEFTBRACE.setNextSibling(PROG_BODY_LOOP.root);
+                    PROG_BODY_LOOP.root.setNextSibling(RIGHTBRACE);
+                }
 
                 if (currentToken.getTokenName().equals(TokenName.RIGHTBRACE)) {
                     RIGHTBRACE = makeNode(currentToken);
                     ADVANCE();
+                    if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                        PROG_BODY_LOOP.root.setNextSibling(RIGHTBRACE);
+                    } else {
+                        LEFTBRACE.setNextSibling(RIGHTBRACE);
+                    }
+                    if (currentToken.getTokenName().equals(TokenName.ENDIF)) {
+                        ENDIF = makeNode(currentToken);
+                    } else {
+                        System.out.println("Error, Token ENDIF not found!");
+                        return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                    }
                 } else {
                     System.out.println("Error, Token RIGHTBRACE not found!");
                     return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
@@ -1358,8 +1437,7 @@ public class SyntaxAnalyzer {
 
         ELSE_STMT_NODE.setFirstChild(ELSE);
         ELSE.setNextSibling(LEFTBRACE);
-        LEFTBRACE.setNextSibling(STATEMENT.root);
-        STATEMENT.root.setNextSibling(RIGHTBRACE);
+        RIGHTBRACE.setNextSibling(ENDIF);
         ELSE_STMT.setRoot(ELSE_STMT_NODE);
         return ELSE_STMT;
     }
@@ -1425,6 +1503,12 @@ public class SyntaxAnalyzer {
             if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
                 IDENTIFIER = makeNode(currentToken);
                 ADVANCE();
+                if (currentToken.getTokenName().equals(TokenName.EOL)) {
+                    EOL = makeNode(currentToken);
+                } else {
+                    System.out.println("Error, Token EOL not found!");
+                    return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                }
             } else {
                 System.out.println("Error, Token IDENTIFIER not found!");
                 return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
@@ -1444,7 +1528,7 @@ public class SyntaxAnalyzer {
     }
 
     //C:\Users\Theodore Arnel Merin\Documents\sample.txt
-    //'ÿ'
+    //'Ã¿'
 
     public void sourceScanner(String absPath) throws FileNotFoundException, IOException {
         String ANSI_BLUE = "\u001B[34m";
@@ -1484,5 +1568,6 @@ public class SyntaxAnalyzer {
         System.out.println("Enter the absolute file path of the source code: ");
         //filePath = console.nextLine();
         syn.sourceScanner("C:\\Users\\Theodore Arnel Merin\\Documents\\sample6.txt");
+
     }
 }
