@@ -15,6 +15,7 @@ public enum TokenName {
     PREDEC,
     POSTINC,
     POSTDEC,
+    ARITHMETIC_EXPRESSION,
     
     NOTRESWRD,   
     ISINTCONST, ISEOL,
