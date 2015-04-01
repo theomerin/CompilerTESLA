@@ -2323,31 +2323,31 @@ public class LexicalAnalyzer {
             lookAhead.unread(pointer);
             tok = getToken(pointer);
             
-            switch (tok.getType()) {
-                case "RESERVED_WORD":
+            switch (tok.getTokenType()) {
+                case RESERVED_WORD:
                     if (!SymbolTable.containsKey(tok.getLexeme()) && !SymbolTable.containsValue(tok)) {
                         SymbolTable.putIfAbsent(tok.getLexeme(), tok);
                     } else {
                         SymbolTable.replace(tok.getLexeme(), tok);
                     }
-                case "RELOP":
-                case "LOGICOP":
-                case "ARITHMETICOP":
-                case "ASSIGNMENTOP":
-                case "BRACE":
-                case "BRACKET":
-                case "PARENTHESIS":
-                case "COMMA":
-                case "CONCATOPP":
-                case "EOL":
-                case "BOOL_CONSTANT":
-                case "CHAR_CONSTANT":
-                case "STRING_CONSTANT":
-                case "INT_CONSTANT":
-                case "FLOAT_CONSTANT":
+                case RELOP:
+                case LOGICOP:
+                case ARITHMETICOP:
+                case ASSIGNMENTOP:
+                case BRACE:
+                case BRACKET:
+                case PARENTHESIS:
+                case COMMA:
+                case CONCATOPP:
+                case EOL:
+                case BOOL_CONSTANT:
+                case CHAR_CONSTANT:
+                case STRING_CONSTANT:
+                case INT_CONSTANT:
+                case FLOAT_CONSTANT:
                     System.out.print(tok.getTokenContent() + " ");
                     break;
-                case "IDENTIFIER":
+                case IDENTIFIER:
                     System.out.print(tok.getTokenContent() + " ");
                     if (!SymbolTable.containsKey(tok.getLexeme()) && !SymbolTable.containsValue(tok)) {
                         SymbolTable.putIfAbsent(tok.getLexeme(), tok);
@@ -2356,7 +2356,7 @@ public class LexicalAnalyzer {
                     }
                     break;
 
-                case "ERROR":
+                case ERROR:
                     System.out.print("[" + tok.getValue() + "] ");
                     break;
                 default:
@@ -2382,8 +2382,8 @@ public class LexicalAnalyzer {
         if (pointer != -1 && (char) pointer != 'ÿ') {
             lookAhead.unread(pointer);
             tok = getToken(pointer);
-            if (tok.getTokenName().equals(TokenName.WHITESPACES) || tok.getTokenName().equals(TokenName.DEFAULT)) {
-                while (tok.getTokenName().equals(TokenName.WHITESPACES) || tok.getTokenName().equals(TokenName.DEFAULT)) {
+            if (tok.getTokenName().equals(TokenName.WHITESPACES) || tok.getTokenName().equals(TokenName.DEFAULT)|| tok.getTokenName().equals(TokenName.SINGLE_COMMENT) || tok.getTokenName().equals(TokenName.MULTI_COMMENT)) {
+                while (tok.getTokenName().equals(TokenName.WHITESPACES) || tok.getTokenName().equals(TokenName.DEFAULT) || tok.getTokenName().equals(TokenName.SINGLE_COMMENT) || tok.getTokenName().equals(TokenName.MULTI_COMMENT)) {
                     pointer = lookAhead.read();
                     if (pointer != -1 && (char) pointer != 'ÿ') {
                         lookAhead.unread(pointer);
@@ -2403,8 +2403,8 @@ public class LexicalAnalyzer {
         if (pointer != -1 && (char) pointer != 'ÿ') {
             lookAhead.unread(pointer);
             tok = getToken(pointer);
-            if (tok.getTokenName().equals(TokenName.WHITESPACES) || tok.getTokenName().equals(TokenName.DEFAULT)) {
-                while (tok.getTokenName().equals(TokenName.WHITESPACES) || tok.getTokenName().equals(TokenName.DEFAULT)) {
+            if (tok.getTokenName().equals(TokenName.WHITESPACES) || tok.getTokenName().equals(TokenName.DEFAULT) || tok.getTokenName().equals(TokenName.SINGLE_COMMENT) || tok.getTokenName().equals(TokenName.MULTI_COMMENT)) {
+                while (tok.getTokenName().equals(TokenName.WHITESPACES) || tok.getTokenName().equals(TokenName.DEFAULT) || tok.getTokenName().equals(TokenName.SINGLE_COMMENT) || tok.getTokenName().equals(TokenName.MULTI_COMMENT)) {
                     pointer = lookAhead.read();
                     if (pointer != -1 && (char) pointer != 'ÿ') {
                         lookAhead.unread(pointer);

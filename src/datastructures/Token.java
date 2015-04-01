@@ -26,8 +26,8 @@ public class Token {
         LineNumber = linenumber;
     }
     
-    public String getType() {
-        return Type.toString();
+    public TokenType getTokenType() {
+        return Type;
     }
     
     public String getLexeme() {

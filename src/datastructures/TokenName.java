@@ -51,6 +51,7 @@ public enum TokenName {
     
     //tokens
     IDENTIFIER,
+    NEGIDENTIFIER,
     SINGLE_COMMENT,
     MULTI_COMMENT,
     WHITESPACES,
@@ -90,13 +91,13 @@ public enum TokenName {
     //------//
     
     //integer constant
-    CONSINT,
+    CONSINT, NEGINT,
     NUM_INIT_PRIME, NUM_INIT, NUMERIC_ASSIGN,
     TO_INT, TO_INTVAL, 
     //------//
     
     //decimal constant
-    CONSFLOAT,
+    CONSFLOAT, NEGFLOAT,
     DEC_INIT_PRIME, DEC_INIT, DEC_ASSIGN,
     //------//
     

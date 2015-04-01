@@ -26,7 +26,10 @@ public class OperatorPrecedenceTable {
                     case PREINC:
                     case PREDEC:
                     case POSTINC:
-                    case POSTDEC:    
+                    case POSTDEC: 
+                    case NEGINT:
+                    case NEGFLOAT:
+                    case NEGIDENTIFIER:
                         return OperatorPrecedence.LESSER;
                 }
                 break;
@@ -51,6 +54,9 @@ public class OperatorPrecedenceTable {
                     case PREDEC:
                     case POSTINC:
                     case POSTDEC:
+                    case NEGINT:
+                    case NEGFLOAT:
+                    case NEGIDENTIFIER:
                         return OperatorPrecedence.LESSER;
                 }
                 break;
@@ -73,6 +79,9 @@ public class OperatorPrecedenceTable {
                     case PREDEC:
                     case POSTINC:
                     case POSTDEC:
+                    case NEGINT:
+                    case NEGFLOAT:
+                    case NEGIDENTIFIER:
                         return OperatorPrecedence.LESSER;
                 }
                 break;
@@ -92,6 +101,9 @@ public class OperatorPrecedenceTable {
                     case PREDEC:
                     case POSTINC:
                     case POSTDEC:
+                    case NEGINT:
+                    case NEGFLOAT:
+                    case NEGIDENTIFIER:
                         return OperatorPrecedence.LESSER;
                     case RIGHTPAR:
                         return OperatorPrecedence.EQUAL;
@@ -107,6 +119,9 @@ public class OperatorPrecedenceTable {
             case PREDEC:
             case POSTINC:
             case POSTDEC:
+            case NEGINT:
+            case NEGFLOAT:
+            case NEGIDENTIFIER:
                 switch(current) {
                     case SUM:
                     case DIFF:
@@ -125,6 +140,9 @@ public class OperatorPrecedenceTable {
                     case PREDEC:
                     case POSTINC:
                     case POSTDEC:
+                    case NEGINT:
+                    case NEGFLOAT:
+                    case NEGIDENTIFIER:
                         return OperatorPrecedence.ERROR;
                 }
                 break;
@@ -143,7 +161,10 @@ public class OperatorPrecedenceTable {
                     case PREINC:
                     case PREDEC:
                     case POSTINC:
-                    case POSTDEC:    
+                    case POSTDEC:   
+                    case NEGINT:
+                    case NEGFLOAT:
+                    case NEGIDENTIFIER:
                         return OperatorPrecedence.LESSER;
                     case RIGHTPAR:
                     case DOLLAR_OPERATOR:
