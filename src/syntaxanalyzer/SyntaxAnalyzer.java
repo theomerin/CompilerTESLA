@@ -642,9 +642,9 @@ public class SyntaxAnalyzer {
             IDENTIFIER = makeNode(currentToken); //current child
             ADVANCE(); //consume next token
             BOOL_ASSIGN = BOOL_ASSIGN();
-            if (!BOOL_ASSIGN.root.token.getTokenName().equals(TokenName.EMPTY)) {
-                ADVANCE();
-            }//consume next token
+//            if (!BOOL_ASSIGN.root.token.getTokenName().equals(TokenName.EMPTY)) {
+//                //ADVANCE();
+//            }//consume next token
             BOOL_INIT = BOOL_INIT();
         } else {
             ERROR = ERROR(TokenName.IDENTIFIER, currentToken, currentToken.getLineNumber());
@@ -707,7 +707,13 @@ public class SyntaxAnalyzer {
         if (currentToken.getTokenName().equals(TokenName.ASSIGNOPP)) {
             ASSIGNOPP = makeNode(currentToken); //current child
             ADVANCE(); //consume next token
-            BOOL_VALUE = BOOL_VALUE();
+            BOOL_VALUE = LOGICAL_EXPRESSION();
+            
+            if (BOOL_VALUE.root.getToken().getTokenName().equals(TokenName.LOGICAL_EXPRESSION)) {
+                BOOL_ASSIGN = new ParseTree(new ParseTreeNode(new Token(TokenName.BOOL_ASSIGN, null, null, null, null, 0), null, null));
+                BOOL_ASSIGN_NODE = new ParseTreeNode(new Token(TokenName.BOOL_ASSIGN, null, null, null, null, 0), null, null);
+            }
+            //BOOL_VALUE = BOOL_VALUE();
             BOOL_ASSIGN_NODE.setFirstChild(ASSIGNOPP);
             ASSIGNOPP.setNextSibling(BOOL_VALUE.root);
             BOOL_ASSIGN_NODE.setNextSibling(BOOL_INIT.root);
@@ -735,7 +741,7 @@ public class SyntaxAnalyzer {
         BOOL_VALUE.setRoot(BOOL_VALUE_NODE);
         return BOOL_VALUE;
     }
-    
+
     public ParseTree NUMERIC_VALUE() throws IOException {
         ParseTreeNode NUMERIC_VALUE_NODE = new ParseTreeNode(new Token(TokenName.NUMERIC_VALUE_NODE, null, null, null, null, 0), null, null); //root node
         ParseTreeNode NUMERIC_NODE = new ParseTreeNode();
@@ -1450,9 +1456,9 @@ public class SyntaxAnalyzer {
         Stack<ParseTreeNode> operandStack = new Stack<>();
         Stack<ParseTreeNode> exStack = new Stack<>();
         Stack<ParseTreeNode> opStack = new Stack<>();
-        
+
         OperatorPrecedenceTable precedenceTable = new OperatorPrecedenceTable();
-        
+
         ParseTreeNode operatorHolder = new ParseTreeNode();
         ParseTreeNode holder = new ParseTreeNode();
         ParseTreeNode firstOperand = new ParseTreeNode();
@@ -1460,10 +1466,10 @@ public class SyntaxAnalyzer {
         ParseTreeNode EXPRESSION_NODE = new ParseTreeNode(new Token(TokenName.ARITHMETIC_EXPRESSION, null, null, null, null, 0), null, null);
         ParseTreeNode NEGEXP_NODE = new ParseTreeNode(new Token(TokenName.NEGEXP_NODE, null, null, null, null, 0), null, null);
         ParseTreeNode NEGEXP_ROOT = new ParseTreeNode(new Token(TokenName.NEGEXP_ROOT, null, null, null, null, 0), null, null);
-        
+
         ParseTree EXPRESSION = new ParseTree();
         ParseTree NEGEXP = new ParseTree();
-        
+
         Token ERROR;
         int leftPar = 0;
         int rightPar = 0;
@@ -1670,7 +1676,7 @@ public class SyntaxAnalyzer {
         expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
         expressionInput.offerLast(NEGEXP_ROOT);
         expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
-        
+
         while (!currentToken.getTokenName().equals(TokenName.EOL) && !currentToken.getTokenName().equals(TokenName.COMMA)) {
             if (currentToken.getTokenName().equals(TokenName.DIFF)) {
                 firstOperand = makeNode(currentToken);
@@ -1842,15 +1848,82 @@ public class SyntaxAnalyzer {
 
         return EXPRESSION;
     }
-    
+
     public ParseTree LOGICAL_EXPRESSION() throws IOException {
-        ParseTreeNode EXPRESSION_NODE = new ParseTreeNode(new Token(TokenName.LOGICAL_EXPRESSION, null, null, null, null, 0), null, null);
+        LinkedList<ParseTreeNode> expressionInput = new LinkedList<>();
+        Stack<ParseTreeNode> expressionStack = new Stack<>();
+        Stack<ParseTreeNode> operandStack = new Stack<>();
+
+        OperatorPrecedenceTable precedenceTable = new OperatorPrecedenceTable();
+
+        ParseTreeNode operatorHolder = new ParseTreeNode();
+        ParseTreeNode holder = new ParseTreeNode();
+        ParseTreeNode firstOperand = new ParseTreeNode();
+        ParseTreeNode secondOperand = new ParseTreeNode();
+        ParseTreeNode EXPRESSION_NODE = new ParseTreeNode(new Token(TokenName.EMPTY, null, null, null, null, 0), null, null);
+        ParseTreeNode NOTEXP_NODE = new ParseTreeNode(new Token(TokenName.NOTEXP_NODE, null, null, null, null, 0), null, null);
+        ParseTreeNode NOTEXP_ROOT = new ParseTreeNode(new Token(TokenName.NOTEXP_ROOT, null, null, null, null, 0), null, null);
+
         ParseTree EXPRESSION = new ParseTree();
-        
+        ParseTree NOTEXP = new ParseTree();
+
+        Token ERROR;
+
+        while (!currentToken.getTokenName().equals(TokenName.EOL) && !currentToken.getTokenName().equals(TokenName.COMMA)) {
+            expressionInput.offerLast(makeNode(currentToken));
+            ADVANCE();
+        }
+
+        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
+        expressionStack.push(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
+
+        while (!expressionInput.isEmpty()) {
+            if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DEFAULT) && expressionInput.size() > 0) {
+                expressionInput.removeFirst();
+            } else if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && !operandStack.isEmpty()) {
+                EXPRESSION_NODE = new ParseTreeNode(new Token(TokenName.LOGICAL_EXPRESSION, null, null, null, null, 0), null, null);
+                EXPRESSION_NODE.setFirstChild(operandStack.pop());
+                EXPRESSION.setRoot(EXPRESSION_NODE);
+                return EXPRESSION;
+            } else if (precedenceTable.evaluatePrecedenceLogical(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER)) {
+                expressionStack.push(expressionInput.removeFirst());
+            } else if (precedenceTable.evaluatePrecedenceLogical(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.DO_NOT)) {
+                firstOperand = expressionStack.pop();
+                secondOperand = expressionInput.removeFirst();
+                //expressionInput.offerFirst(new ParseTreeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0), null, null));
+                expressionInput.offerFirst(new ParseTreeNode(new Token(TokenName.NOTEXP_NODE, null, null, null, null, 0), firstOperand, secondOperand));
+                //expressionInput.offerFirst(new ParseTreeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0), null, null));
+            } else if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.RIGHTPAR) && expressionInput.peekLast().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.size() == 1) {
+                overReadToken = expressionInput.removeFirst().getToken();
+                EXPRESSION_NODE.setFirstChild(operandStack.pop());
+                EXPRESSION.setRoot(EXPRESSION_NODE);
+                return EXPRESSION;
+            } else if (precedenceTable.evaluatePrecedenceLogical(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.GREATER)) {
+                holder = expressionStack.pop();
+                if (holder.getToken().getTokenName().equals(TokenName.AFFIRM) || holder.getToken().getTokenName().equals(TokenName.NEGATE) || holder.getToken().getTokenName().equals(TokenName.IDENTIFIER) || holder.getToken().getTokenName().equals(TokenName.NOTEXP_NODE)) {
+                    operandStack.push(holder);
+                } else {
+                    secondOperand = operandStack.pop();
+                    firstOperand = operandStack.pop();
+                    holder.setChildAndSibling(firstOperand, secondOperand);
+                    operandStack.push(holder);
+                }
+            } else if (precedenceTable.evaluatePrecedenceArithmetic(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
+                expressionStack.pop();
+                expressionInput.removeFirst();
+                if (expressionStack.peek().getToken().getTokenName().equals(TokenName.LOGICNOT) && (operandStack.peek().getToken().getTokenName().equals(TokenName.AFFIRM) || operandStack.peek().getToken().getTokenName().equals(TokenName.NEGATE) || operandStack.peek().getToken().getTokenName().equals(TokenName.IDENTIFIER) || operandStack.peek().getToken().getTokenName().equals(TokenName.NOTEXP_NODE))) {
+                    firstOperand = expressionStack.pop();
+                    secondOperand = operandStack.pop();
+                    operandStack.push(new ParseTreeNode(new Token(TokenName.NOTEXP_NODE, null, null, null, null, 0), firstOperand, secondOperand));
+                }
+            }
+        }
+
         return EXPRESSION;
     }
-    //C:\Users\Theodore Arnel Merin\Documents\sample.txt
+        //C:\Users\Theodore Arnel Merin\Documents\sample.txt
     //'Ã¿'
+
     public void sourceScanner(String absPath) throws FileNotFoundException, IOException {
         String ANSI_BLUE = "\u001B[34m";
         String ANSI_RESET = "\u001B[0m";

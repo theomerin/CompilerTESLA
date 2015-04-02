@@ -185,8 +185,26 @@ public class OperatorPrecedenceTable {
         return OperatorPrecedence.ERROR;
     }
 
-    public OperatorPrecedence evaluatePrecedenceAndLogical(TokenName previous, TokenName current) {
+    public OperatorPrecedence evaluatePrecedenceLogical(TokenName previous, TokenName current) {
         switch (previous) {
+            case LOGICNOT:
+                switch (current) {
+                    case LOGICNOT:
+                    case LEFTPAR:
+                        return OperatorPrecedence.LESSER;
+                    case LOGICAND:
+                    case LOGICOR:
+                    case RIGHTPAR:
+                    case DOLLAR_OPERATOR:
+                        return OperatorPrecedence.GREATER;
+                    case IDENTIFIER:
+                    case AFFIRM:
+                    case NEGATE:
+                    case NOTEXP_NODE:
+                    case RELATIONAL_EXPRESSION:
+                        return OperatorPrecedence.DO_NOT;
+                }
+                break;
             case LOGICAND:
             case LOGICOR:
                 switch (current) {
@@ -199,8 +217,9 @@ public class OperatorPrecedenceTable {
                     case IDENTIFIER:
                     case AFFIRM:
                     case NEGATE:
-                    case NEGBOOL:
+                    case NOTEXP_NODE:
                     case RELATIONAL_EXPRESSION:
+                    case LOGICNOT:
                         return OperatorPrecedence.LESSER;
                 }
                 break;
@@ -212,8 +231,9 @@ public class OperatorPrecedenceTable {
                     case IDENTIFIER:
                     case AFFIRM:
                     case NEGATE:
-                    case NEGBOOL:
+                    case NOTEXP_NODE:
                     case RELATIONAL_EXPRESSION:
+                    case LOGICNOT:
                         return OperatorPrecedence.LESSER;
                     case RIGHTPAR:
                         return OperatorPrecedence.EQUAL;
@@ -225,7 +245,7 @@ public class OperatorPrecedenceTable {
             case IDENTIFIER:
             case AFFIRM:
             case NEGATE:
-            case NEGBOOL:
+            case NOTEXP_NODE:
             case RELATIONAL_EXPRESSION:
                 switch (current) {
                     case LOGICAND:
@@ -237,7 +257,7 @@ public class OperatorPrecedenceTable {
                     case IDENTIFIER:
                     case AFFIRM:
                     case NEGATE:
-                    case NEGBOOL:
+                    case NOTEXP_NODE:
                     case RELATIONAL_EXPRESSION:
                         return OperatorPrecedence.ERROR;
                 }
@@ -250,8 +270,9 @@ public class OperatorPrecedenceTable {
                     case IDENTIFIER:
                     case AFFIRM:
                     case NEGATE:
-                    case NEGBOOL:
+                    case NOTEXP_NODE:
                     case RELATIONAL_EXPRESSION:
+                    case LOGICNOT:
                         return OperatorPrecedence.LESSER;
                     case RIGHTPAR:
                     case DOLLAR_OPERATOR:

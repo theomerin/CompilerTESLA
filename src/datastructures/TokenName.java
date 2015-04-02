@@ -2,7 +2,6 @@ package datastructures;
 
 public enum TokenName {
     
-    
     PROGRAM_ROOT,
     PROGRAM_STMT,
     PROGRAM_BODY,
@@ -20,6 +19,8 @@ public enum TokenName {
     LOGICAL_EXPRESSION,
     NEGEXP_NODE,
     NEGEXP_ROOT,
+    NOTEXP_NODE,
+    NOTEXP_ROOT,
     
     NOTRESWRD,   
     ISINTCONST, ISEOL,

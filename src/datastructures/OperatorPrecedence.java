@@ -4,5 +4,6 @@ public enum OperatorPrecedence {
     GREATER,
     LESSER,
     EQUAL,
-    ERROR
+    ERROR,
+    DO_NOT,
 }

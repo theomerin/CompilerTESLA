@@ -197,7 +197,10 @@ public class LexicalAnalyzer {
                         state = 9;
                         value = value + current;
                     } else {
-                        state = 10;
+                        ptr.unread(pointer);
+                        lookAhead = ptr;
+                        colNumber--;
+                        return new Token(TokenName.LOGICNOT, TokenType.LOGICOP, value, value, null, lineNumber);
                     }
                     break;
                 case 9:
