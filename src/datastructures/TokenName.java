@@ -21,6 +21,9 @@ public enum TokenName {
     NEGEXP_ROOT,
     NOTEXP_NODE,
     NOTEXP_ROOT,
+    NUMERIC_CONSTANT_OR_IDENTIFIER,
+    BOOLEAN_CONSTANT,
+    ELSEIF_OR_ELSE,
     
     NOTRESWRD,   
     ISINTCONST, ISEOL,
@@ -119,7 +122,7 @@ public enum TokenName {
     //------//
     
     //boolean constant
-    BOOL_INIT_PRIME, BOOL_INIT, BOOL_ASSIGN, BOOL_VALUE, 
+    BOOL_INIT_PRIME, BOOL_INIT, BOOL_ASSIGN, BOOL_VALUE, CONSBOOL,
     //------//
     
     //statement - numeric value 
