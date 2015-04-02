@@ -229,6 +229,8 @@ public class SyntaxAnalyzer {
             case IF:
             case TRANSMIT:
             case RECEIVE:
+            case DURING:
+            case EXECUTE:
                 STATEMENT = STATEMENT();
                 //ADVANCE();
                 PROGRAM_BODY_LOOP = PROG_BODY();
@@ -833,6 +835,22 @@ public class SyntaxAnalyzer {
                     STATEMENT.root.setNextSibling(STATEMENT_LOOP.root);
                 }
                 return STATEMENT;
+            case DURING:
+                STATEMENT = DURING_STMT();
+                ADVANCE();
+                STATEMENT_LOOP = STATEMENT();
+                if (!STATEMENT_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                    STATEMENT.root.setNextSibling(STATEMENT_LOOP.root);
+                }
+                return STATEMENT;
+            case EXECUTE:
+                STATEMENT = EXECUTE_STMT();
+                ADVANCE();
+                STATEMENT_LOOP = STATEMENT();
+                if (!STATEMENT_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                    STATEMENT.root.setNextSibling(STATEMENT_LOOP.root);
+                }
+                return STATEMENT;
             default:
                 return STATEMENT;
         }
@@ -1149,38 +1167,44 @@ public class SyntaxAnalyzer {
         ParseTree IF_STMT_PRIME = new ParseTree();
         ParseTree IF_STMT = new ParseTree();
 
-        if (currentToken.getTokenName().equals(TokenName.IF)) {
+        if (currentToken.getTokenName().equals(TokenName.IF))
+        {
             IF = makeNode(currentToken);
             ADVANCE();
-            if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
+            if (currentToken.getTokenName().equals(TokenName.LEFTPAR))
+            {
                 LEFTPAR = makeNode(currentToken);
                 ADVANCE();
                 // Build/Create a grammar and code for Reg Exp
-                // RegExp = REXP();
+                RegExp = LOGICAL_EXPRESSION();
                 // ADVANCE();
-                if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) {
+                if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) 
+                {
                     RIGHTPAR = makeNode(currentToken);
-                    ADVANCE();
-                    if (currentToken.getTokenName().equals(TokenName.LEFTBRACE)) {
+                    //ADVANCE();
+                    if (currentToken.getTokenName().equals(TokenName.LEFTBRACE)) 
+                    {
                         LEFTBRACE = makeNode(currentToken);
                         ADVANCE();
                         PROG_BODY_LOOP = PROG_BODY();
                         if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
                             LEFTBRACE.setNextSibling(PROG_BODY_LOOP.root);
                         }
-                        if (currentToken.getTokenName().equals(TokenName.RIGHTBRACE)) {
+                        if (currentToken.getTokenName().equals(TokenName.RIGHTBRACE)) 
+                        {
                             RIGHTBRACE = makeNode(currentToken);
                             ADVANCE();
                             if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
                                 PROG_BODY_LOOP.root.setNextSibling(RIGHTBRACE);
-                            } else {
+                            }
+                            else{
                                 LEFTBRACE.setNextSibling(RIGHTBRACE);
                             }
                             IF_STMT = IF_STMT();
                         } else {
                             System.out.println("Error, Token RIGHTBRACE not found!");
                             return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
-                        }
+                        }   
                     } else {
                         System.out.println("Error, Token LEFTBRACE not found!");
                         return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
@@ -1188,11 +1212,11 @@ public class SyntaxAnalyzer {
                 } else {
                     System.out.println("Error, Token RIGHTPAR not found!");
                     return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
-                }
+                  }
             } else {
                 System.out.println("Error, Token LEFTPAR not found!");
                 return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
-            }
+                }
         } else {
             System.out.println("Error, Token IF not found!");
             return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
@@ -1201,44 +1225,44 @@ public class SyntaxAnalyzer {
         IF_STMT_PRIME_NODE.setFirstChild(IF);
         IF.setNextSibling(LEFTPAR);
         //Insert if there's a RegExp
-        //LEFTPAR.setNextSibling(RegExp.root);
-        //RegExp.root.setNextSibling(RIGHTPAR);
-        LEFTPAR.setNextSibling(RIGHTPAR); // remove this if there's RegExp
+        LEFTPAR.setNextSibling(RegExp.root);
+        RegExp.root.setNextSibling(RIGHTPAR);
+        //LEFTPAR.setNextSibling(RIGHTPAR); // remove this if there's RegExp
         RIGHTPAR.setNextSibling(LEFTBRACE);
         RIGHTBRACE.setNextSibling(IF_STMT.root);
         IF_STMT_PRIME.setRoot(IF_STMT_PRIME_NODE);
         return IF_STMT_PRIME;
     }
-
+    
     public ParseTree IF_STMT() throws IOException {
         ParseTree ELSEIF_STMT = new ParseTree();
         ParseTree ELSE_STMT = new ParseTree();
-        ParseTree ENDIF_STMT = new ParseTree();
+        ParseTree ENDIF_STMT = new ParseTree(new ParseTreeNode(new Token(TokenName.END_IF_STMT, null, null, null, null, 0), null, null));
         ParseTreeNode ENDIF = new ParseTreeNode();
         ParseTree Empty = new ParseTree();
 
-        switch (currentToken.getTokenName()) {
+        switch(currentToken.getTokenName()) {
             case ELSEIF:
                 ELSEIF_STMT = ELSEIF_STMT();
-                ADVANCE();
                 return ELSEIF_STMT;
             case ELSE:
                 ELSE_STMT = ELSE_STMT();
                 return ELSE_STMT;
             case ENDIF:
-                System.out.println("Inside ENDIF, token is: ^^^^^ " + currentToken.getTokenName() + "^^^");
-                ENDIF = makeNode(currentToken);
+                ENDIF = makeNode(currentToken);  
                 ENDIF_STMT.root.setFirstChild(ENDIF);
-                ADVANCE();
-                return ENDIF_STMT;
+                return ENDIF_STMT;    
             default:
-                return Empty;
-        }
+                System.out.println("Error, Token ENDIF not found!");
+                return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                
+        }   
     }
 
     public ParseTree ELSEIF_STMT() throws IOException {
         ParseTreeNode ELSEIF_STMT_NODE = new ParseTreeNode(new Token(TokenName.ELSEIF_STMT, null, null, null, null, 0), null, null); //root node
         ParseTree PROG_BODY_LOOP = new ParseTree(new ParseTreeNode(new Token(TokenName.EMPTY, null, null, null, null, 0), null, null));
+        ParseTree ELSEIF_STMT_LOOP = new ParseTree(new ParseTreeNode(new Token(TokenName.EMPTY, null, null, null, null, 0), null, null));
         ParseTreeNode ELSEIF = new ParseTreeNode();
         ParseTreeNode LEFTPAR = new ParseTreeNode();
         ParseTreeNode RIGHTPAR = new ParseTreeNode();
@@ -1247,21 +1271,23 @@ public class SyntaxAnalyzer {
         ParseTree ELSE_STMT = new ParseTree();
         ParseTree ELSEIF_STMT = new ParseTree();
 
-        if (currentToken.getTokenName().equals(TokenName.ELSEIF)) {
+        if (currentToken.getTokenName().equals(TokenName.ELSEIF))
+        {
             ELSEIF = makeNode(currentToken);
             ADVANCE();
-            if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
+            if (currentToken.getTokenName().equals(TokenName.LEFTPAR))
+            {
                 LEFTPAR = makeNode(currentToken);
-                ADVANCE();
-
+                ADVANCE();                
                 // Build/Create a grammar and code for Reg Exp
                 // RegExp = REXP();
                 //ADVANCE();
-                if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) {
+                if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) 
+                {
                     RIGHTPAR = makeNode(currentToken);
                     ADVANCE();
-
-                    if (currentToken.getTokenName().equals(TokenName.LEFTBRACE)) {
+                    if (currentToken.getTokenName().equals(TokenName.LEFTBRACE)) 
+                    {
                         LEFTBRACE = makeNode(currentToken);
                         ADVANCE();
                         PROG_BODY_LOOP = PROG_BODY();
@@ -1269,41 +1295,61 @@ public class SyntaxAnalyzer {
                             LEFTBRACE.setNextSibling(PROG_BODY_LOOP.root);
                             PROG_BODY_LOOP.root.setNextSibling(RIGHTBRACE);
                         }
-
-                        if (currentToken.getTokenName().equals(TokenName.RIGHTBRACE)) {
+                        if (currentToken.getTokenName().equals(TokenName.RIGHTBRACE)) 
+                        {
                             RIGHTBRACE = makeNode(currentToken);
                             ADVANCE();
                             if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
                                 PROG_BODY_LOOP.root.setNextSibling(RIGHTBRACE);
-                            } else {
+                            } else{
+                                
                                 LEFTBRACE.setNextSibling(RIGHTBRACE);
                             }
-                            ELSE_STMT = ELSE_STMT();
+
+                            if(currentToken.getTokenName().equals(TokenName.ELSEIF))
+                            {
+                                ELSEIF_STMT_LOOP = ELSEIF_STMT();
+                                RIGHTBRACE.setNextSibling(ELSEIF_STMT_LOOP.root);
+                            }
+                            else
+                            {
+                                if (!ELSEIF_STMT_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                                    RIGHTBRACE.setNextSibling(ELSEIF_STMT_LOOP.root);
+                                } else{
+                                    ELSE_STMT = ELSE_STMT();
+                                    RIGHTBRACE.setNextSibling(ELSE_STMT.root);
+                                }
+                            }
+                            
                         } else {
                             System.out.println("Error, Token RIGHTBRACE not found!");
                             return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
-                        }
+                          } 
                     } else {
                         System.out.println("Error, Token LEFTBRACE not found!");
                         return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
-                    }
-
+                      }
+                    
                 } else {
                     System.out.println("Error, Token RIGHTPAR not found!");
                     return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
-                }
-            } else {
+                    }
+            }else {
                 System.out.println("Error, Token LEFTPAR not found!");
                 return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
-            }
-        } else if (currentToken.getTokenName().equals(TokenName.ELSE)) {
+                }
+        }     
+        else if (currentToken.getTokenName().equals(TokenName.ELSE))
+        {
             ELSE_STMT = ELSE_STMT();
             ADVANCE();
-        } else {
+        }
+        else {
             System.out.println("Error, Token ELSEIF/ELSE not found!");
             return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
         }
 
+        
         ELSEIF_STMT_NODE.setFirstChild(ELSEIF);
         ELSEIF.setNextSibling(LEFTPAR);
         //Insert if there's a RegExp
@@ -1311,11 +1357,10 @@ public class SyntaxAnalyzer {
         //RegExp.root.setNextSibling(RIGHTPAR);
         LEFTPAR.setNextSibling(RIGHTPAR); // remove this if there's RegExp
         RIGHTPAR.setNextSibling(LEFTBRACE);
-        RIGHTBRACE.setNextSibling(ELSE_STMT.root);
         ELSEIF_STMT.setRoot(ELSEIF_STMT_NODE);
         return ELSEIF_STMT;
     }
-
+    
     public ParseTree ELSE_STMT() throws IOException {
         ParseTreeNode ELSE_STMT_NODE = new ParseTreeNode(new Token(TokenName.ELSE_STMT, null, null, null, null, 0), null, null); //root node
         ParseTree PROG_BODY_LOOP = new ParseTree(new ParseTreeNode(new Token(TokenName.EMPTY, null, null, null, null, 0), null, null));
@@ -1324,42 +1369,46 @@ public class SyntaxAnalyzer {
         ParseTreeNode RIGHTBRACE = new ParseTreeNode();
         ParseTreeNode ENDIF = new ParseTreeNode();
         ParseTree ELSE_STMT = new ParseTree();
-
-        if (currentToken.getTokenName().equals(TokenName.ELSE)) {
+        
+        if (currentToken.getTokenName().equals(TokenName.ELSE))
+        {
             ELSE = makeNode(currentToken);
             ADVANCE();
-            if (currentToken.getTokenName().equals(TokenName.LEFTBRACE)) {
+            if (currentToken.getTokenName().equals(TokenName.LEFTBRACE))
+            {
                 LEFTBRACE = makeNode(currentToken);
                 ADVANCE();
                 PROG_BODY_LOOP = PROG_BODY();
                 if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
                     LEFTBRACE.setNextSibling(PROG_BODY_LOOP.root);
                     PROG_BODY_LOOP.root.setNextSibling(RIGHTBRACE);
-                }
-
-                if (currentToken.getTokenName().equals(TokenName.RIGHTBRACE)) {
+                } 
+                
+                if (currentToken.getTokenName().equals(TokenName.RIGHTBRACE)) 
+                {
                     RIGHTBRACE = makeNode(currentToken);
                     ADVANCE();
                     if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
                         PROG_BODY_LOOP.root.setNextSibling(RIGHTBRACE);
-                    } else {
+                    } else{
                         LEFTBRACE.setNextSibling(RIGHTBRACE);
                     }
-                    if (currentToken.getTokenName().equals(TokenName.ENDIF)) {
+                    if (currentToken.getTokenName().equals(TokenName.ENDIF)) 
+                    {
                         ENDIF = makeNode(currentToken);
                     } else {
-                        System.out.println("Error, Token ENDIF not found!");
-                        return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                    System.out.println("Error, Token ENDIF not found!");
+                    return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
                     }
                 } else {
                     System.out.println("Error, Token RIGHTBRACE not found!");
                     return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
-                }
-            } else {
+                    }
+            }else {
                 System.out.println("Error, Token LEFTBRACE not found!");
                 return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
-            }
-        } else {
+                }
+        }else {
             System.out.println("Error, Token ELSE not found!");
             return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
         }
@@ -1369,6 +1418,180 @@ public class SyntaxAnalyzer {
         RIGHTBRACE.setNextSibling(ENDIF);
         ELSE_STMT.setRoot(ELSE_STMT_NODE);
         return ELSE_STMT;
+    }
+    
+    
+    public ParseTree DURING_STMT() throws IOException {
+        ParseTreeNode DURING_STMT_NODE = new ParseTreeNode(new Token(TokenName.DURING_STMT, null, null, null, null, 0), null, null); //root node
+        ParseTree PROG_BODY_LOOP = new ParseTree(new ParseTreeNode(new Token(TokenName.EMPTY, null, null, null, null, 0), null, null));
+        ParseTreeNode DURING = new ParseTreeNode();
+        ParseTreeNode LEFTPAR = new ParseTreeNode();
+        ParseTreeNode RIGHTPAR = new ParseTreeNode();
+        ParseTreeNode LEFTBRACE = new ParseTreeNode();
+        ParseTreeNode RIGHTBRACE = new ParseTreeNode();
+        ParseTree RegExp = new ParseTree();
+        ParseTree DURING_STMT = new ParseTree();
+        
+         if (currentToken.getTokenName().equals(TokenName.DURING))
+        {
+            DURING = makeNode(currentToken);
+            ADVANCE();
+            if (currentToken.getTokenName().equals(TokenName.LEFTPAR))
+            {
+                LEFTPAR = makeNode(currentToken);
+                ADVANCE();
+                // Build/Create a grammar and code for Reg Exp
+                // RegExp = REXP();
+                // ADVANCE();
+                if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) 
+                {
+                    RIGHTPAR = makeNode(currentToken);
+                    ADVANCE();
+                    if (currentToken.getTokenName().equals(TokenName.LEFTBRACE)) 
+                    {
+                        LEFTBRACE = makeNode(currentToken);
+                        ADVANCE();
+                        PROG_BODY_LOOP = PROG_BODY();
+                        if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                            LEFTBRACE.setNextSibling(PROG_BODY_LOOP.root);
+                        }
+                        if (currentToken.getTokenName().equals(TokenName.RIGHTBRACE)) 
+                        {
+                            RIGHTBRACE = makeNode(currentToken);
+                            if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                                PROG_BODY_LOOP.root.setNextSibling(RIGHTBRACE);
+                                
+                            }
+                            else{
+                                LEFTBRACE.setNextSibling(RIGHTBRACE);
+                            }
+                        } else {
+                            System.out.println("Error, Token RIGHTBRACE not found!");
+                            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                        }   
+                    } else {
+                        System.out.println("Error, Token LEFTBRACE not found!");
+                        return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                    }
+                } else {
+                    System.out.println("Error, Token RIGHTPAR not found!");
+                    return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                  }
+            } else {
+                System.out.println("Error, Token LEFTPAR not found!");
+                return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                }
+        } else {
+            System.out.println("Error, Token DURING not found!");
+            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+        }
+
+        DURING_STMT_NODE.setFirstChild(DURING);
+        DURING.setNextSibling(LEFTPAR);
+        //Insert if there's a RegExp
+        //LEFTPAR.setNextSibling(RegExp.root);
+        //RegExp.root.setNextSibling(RIGHTPAR);
+        LEFTPAR.setNextSibling(RIGHTPAR); // remove this if there's RegExp
+        RIGHTPAR.setNextSibling(LEFTBRACE);
+        DURING_STMT.setRoot(DURING_STMT_NODE);
+        return DURING_STMT;
+    }
+
+public ParseTree EXECUTE_STMT() throws IOException{
+        ParseTreeNode EXECUTE_STMT_NODE = new ParseTreeNode(new Token(TokenName.EXECUTE_STMT, null, null, null, null, 0), null, null);
+        ParseTree PROG_BODY_LOOP = new ParseTree(new ParseTreeNode(new Token(TokenName.EMPTY, null, null, null, null, 0), null, null));
+        ParseTreeNode EXECUTE = new ParseTreeNode();
+        ParseTreeNode LEFTBRACE = new ParseTreeNode();
+        ParseTreeNode RIGHTBRACE = new ParseTreeNode();
+        ParseTreeNode DURING = new ParseTreeNode();
+        ParseTreeNode LEFTPAR = new ParseTreeNode();
+        ParseTreeNode RIGHTPAR = new ParseTreeNode();
+        ParseTree RegExp = new ParseTree();
+        ParseTree EXECUTE_STMT = new ParseTree();
+        
+        if (currentToken.getTokenName().equals(TokenName.EXECUTE))
+        {
+        	EXECUTE = makeNode(currentToken);
+        	ADVANCE();
+        	if (currentToken.getTokenName().equals(TokenName.LEFTBRACE))
+        	{
+        		LEFTBRACE = makeNode(currentToken);
+        		ADVANCE();
+                        PROG_BODY_LOOP = PROG_BODY();
+                        if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                            LEFTBRACE.setNextSibling(PROG_BODY_LOOP.root);
+                        }
+        		
+        		if (currentToken.getTokenName().equals(TokenName.RIGHTBRACE)) 
+                        {
+                            RIGHTBRACE = makeNode(currentToken);
+                            if (!PROG_BODY_LOOP.root.token.getTokenName().equals(TokenName.EMPTY)) {
+                                PROG_BODY_LOOP.root.setNextSibling(RIGHTBRACE);
+                                
+                            }
+                            else{
+                                LEFTBRACE.setNextSibling(RIGHTBRACE);
+                            }
+                            ADVANCE();
+                            if (currentToken.getTokenName().equals(TokenName.DURING)) 
+                            {
+                                DURING = makeNode(currentToken);
+                                ADVANCE();
+                                if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) 
+                                {
+                                    LEFTPAR = makeNode(currentToken);
+                                    ADVANCE();
+
+                                    // Build/Create a grammar and code for Reg Exp
+                                    // RegExp = REXP();
+                                    // ADVANCE();
+                                    
+                                    if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) 
+                                    {
+                                        RIGHTPAR = makeNode(currentToken);
+
+                                    } else {
+                                        System.out.println("Error, Token RIGHTPAR not found!");
+                                        return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                                    }
+
+                                } else {
+                                    System.out.println("Error, Token LEFTPAR not found!");
+                                    return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                                }
+                                
+                            } else {
+                                System.out.println("Error, Token DURING not found!");
+                                return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                            }
+                            
+                        } else {
+                            System.out.println("Error, Token RIGHTBRACE not found!");
+                            return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+                        } 
+        	}
+        	else
+        	{
+        		 System.out.println("Error, Token LEFTBRACE not found!");
+                 return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+        	}
+        }
+        else
+        {
+        	 System.out.println("Error, Token EXECUTE not found!");
+             return new ParseTree(new ParseTreeNode(new Token(TokenName.ERROR, null, null, null, null, 0), null, null));
+        }
+        
+        EXECUTE_STMT_NODE.setFirstChild(EXECUTE);
+        EXECUTE.setNextSibling(LEFTBRACE);
+        DURING.setNextSibling(LEFTPAR);
+        RIGHTBRACE.setNextSibling(DURING);
+        //Insert if there's a RegExp
+        //LEFTPAR.setNextSibling(RegExp.root);
+        //RegExp.root.setNextSibling(RIGHTPAR);
+        LEFTPAR.setNextSibling(RIGHTPAR); // remove this if there's RegExp
+        EXECUTE_STMT.setRoot(EXECUTE_STMT_NODE);
+        return EXECUTE_STMT;
     }
 
     public ParseTree OUTPUT() throws IOException {
@@ -1873,7 +2096,7 @@ public class SyntaxAnalyzer {
                 EXPRESSION_NODE.setFirstChild(operandStack.pop());
                 EXPRESSION.setRoot(EXPRESSION_NODE);
                 return EXPRESSION;
-            } else if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.RIGHTPAR) && expressionInput.peekLast().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.size() == 1) {
+            } else if ((expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.RIGHTPAR) || expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.LEFTBRACE)) && expressionInput.peekLast().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.size() == 1) {
                 overReadToken = expressionInput.removeFirst().getToken();
                 EXPRESSION_NODE.setFirstChild(operandStack.pop());
                 EXPRESSION.setRoot(EXPRESSION_NODE);
@@ -1924,7 +2147,7 @@ public class SyntaxAnalyzer {
             unmatchedLeftPar--;
         }
 
-        while (!currentToken.getTokenName().equals(TokenName.EOL) && !currentToken.getTokenName().equals(TokenName.COMMA)) {
+        while (!currentToken.getTokenName().equals(TokenName.EOL) && !currentToken.getTokenName().equals(TokenName.COMMA) && !currentToken.getTokenName().equals(TokenName.LEFTBRACE)) {
             expressionInput.offerLast(makeNode(currentToken));
             ADVANCE();
         }

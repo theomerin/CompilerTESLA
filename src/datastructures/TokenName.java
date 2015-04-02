@@ -135,6 +135,6 @@ public enum TokenName {
     ELSE_STMT,
     //------//
     
-    INPUT, OUTPUT,
+    INPUT, OUTPUT, DURING_STMT, END_IF_STMT, EXECUTE_STMT,
     
 }
