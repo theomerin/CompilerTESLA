@@ -327,7 +327,6 @@ public class SyntaxAnalyzer {
             if (currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT) || currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.LEFTPAR) || currentToken.getTokenName().equals(TokenName.INC) || currentToken.getTokenName().equals(TokenName.DEC) || currentToken.getTokenName().equals(TokenName.DIFF)) {
                 EXPRESSION.root.setFirstChild(ARITHMETIC_EXPRESSION().root);
                 NUM_INIT = NUM_INIT();
-                
                 NUMERIC_ASSIGN_NODE.setToken(new Token(TokenName.NUMERIC_ASSIGN, null, null, null, null, 0));
             } else {
                 ERROR = ERROR(name, currentToken, currentToken.getLineNumber());
@@ -736,401 +735,7 @@ public class SyntaxAnalyzer {
         BOOL_VALUE.setRoot(BOOL_VALUE_NODE);
         return BOOL_VALUE;
     }
-
-    public ParseTree ARITHMETIC_EXPRESSION() throws IOException {
-        LinkedList<ParseTreeNode> expressionInput = new LinkedList<>();
-        Stack<ParseTreeNode> expressionStack = new Stack<>();
-        Stack<ParseTreeNode> operandStack = new Stack<>();
-        LinkedList<ParseTreeNode> exInput = new LinkedList<>();
-        Stack<ParseTreeNode> exStack = new Stack<>();
-        Stack<ParseTreeNode> opStack = new Stack<>();
-        OperatorPrecedenceTable precedenceTable = new OperatorPrecedenceTable();
-        ParseTreeNode operatorHolder, holder = new ParseTreeNode(), firstOperand = new ParseTreeNode(), secondOperand = new ParseTreeNode();
-        ParseTree subTree = new ParseTree();
-        ParseTree EXPRESSION = new ParseTree();
-        ParseTree NEGEXP = new ParseTree();
-        ParseTreeNode EXPRESSION_NODE = new ParseTreeNode(new Token(TokenName.ARITHMETIC_EXPRESSION, null, null, null, null, 0), null, null);
-        ParseTreeNode NEGEXP_NODE = new ParseTreeNode(new Token(TokenName.NEGEXP_NODE, null, null, null, null, 0), null, null);
-        ParseTreeNode NEGEXP_ROOT = new ParseTreeNode(new Token(TokenName.NEGEXP_ROOT, null, null, null, null, 0), null, null);
-        Token ERROR;
-        int leftPar = 0;
-        int rightPar = 0;
-
-        if (currentToken.getTokenName().equals(TokenName.DIFF)) {
-            firstOperand = makeNode(currentToken);
-            operatorHolder = firstOperand;
-            ADVANCE();
-            if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
-                secondOperand = makeNode(currentToken);
-                expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
-                if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
-                    expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
-                } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
-                    expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
-                } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
-                    expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
-                }
-                expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
-                ADVANCE();
-            } else if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
-                leftPar++;
-                exInput.offerLast(makeNode(currentToken));
-                ADVANCE();
-                while (leftPar != rightPar) {
-                    if (currentToken.getTokenName().equals(TokenName.DIFF)) {
-                        firstOperand = makeNode(currentToken);
-                        ADVANCE();
-                        if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
-                            secondOperand = makeNode(currentToken);
-                            exInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
-                            if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
-                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
-                            } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
-                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
-                            } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
-                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
-                            }
-                            exInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
-                            ADVANCE();
-                        }
-                    } else if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
-                        leftPar++;
-                        holder = makeNode(currentToken);
-                        ADVANCE();
-                        if (currentToken.getTokenName().equals(TokenName.DIFF)) {
-                            exInput.offerLast(holder);
-                            firstOperand = makeNode(currentToken);
-                            ADVANCE();
-                            if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
-                                secondOperand = makeNode(currentToken);
-                                if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
-                                    exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
-                                } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
-                                    exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
-                                } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
-                                    exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
-                                }
-                                ADVANCE();
-                                if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) {
-                                    rightPar++;
-                                    exInput.offerLast(makeNode(currentToken));
-                                    ADVANCE();
-                                }
-                            }
-                        } else {
-                            exInput.offerLast(holder);
-                            exInput.offerLast(makeNode(currentToken));
-                            ADVANCE();
-                        }
-                    } else if (currentToken.getTokenType().equals(TokenType.ARITHMETICOP)) {
-                        holder = makeNode(currentToken);
-                        ADVANCE();
-                        if (currentToken.getTokenName().equals(TokenName.DIFF)) {
-                            exInput.offerLast(holder);
-                            firstOperand = makeNode(currentToken);
-                            ADVANCE();
-                            if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
-                                secondOperand = makeNode(currentToken);
-                                exInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
-                                if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
-                                    exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
-                                } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
-                                    exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
-                                } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
-                                    exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
-                                }
-                                exInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
-                                ADVANCE();
-                            }
-                        } else if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
-                            leftPar++;
-                            exInput.offerLast(holder);
-                            holder = makeNode(currentToken);
-                            ADVANCE();
-                            if (currentToken.getTokenName().equals(TokenName.DIFF)) {
-                                exInput.offerLast(holder);
-                                firstOperand = makeNode(currentToken);
-                                ADVANCE();
-                                if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
-                                    secondOperand = makeNode(currentToken);
-                                    if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
-                                        exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
-                                    } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
-                                        exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
-                                    } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
-                                        exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
-                                    }
-                                    ADVANCE();
-                                    if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) {
-                                        rightPar++;
-                                        exInput.offerLast(makeNode(currentToken));
-                                        ADVANCE();
-                                    }
-                                }
-                            } else {
-                                exInput.offerLast(holder);
-                                exInput.offerLast(makeNode(currentToken));
-                                ADVANCE();
-                            }
-                        } else {
-                            exInput.offerLast(holder);
-                            exInput.offerLast(makeNode(currentToken));
-                            ADVANCE();
-                        }
-                    } else if (currentToken.getTokenName().equals(TokenName.INC) || currentToken.getTokenName().equals(TokenName.DEC)) {
-                        firstOperand = makeNode(currentToken);
-                        ADVANCE();
-                        if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
-                            secondOperand = makeNode(currentToken);
-                            exInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
-                            if (firstOperand.getToken().getTokenName().equals(TokenName.INC)) {
-                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.PREINC, null, null, null, null, 0), firstOperand, secondOperand));
-                            } else if (firstOperand.getToken().getTokenName().equals(TokenName.DEC)) {
-                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.PREDEC, null, null, null, null, 0), firstOperand, secondOperand));
-                            }
-                            exInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
-                            ADVANCE();
-                        } else {
-                            ERROR = ERROR(TokenName.IDENTIFIER, currentToken, currentToken.getLineNumber());
-                            return new ParseTree(new ParseTreeNode(ERROR, null, null));
-                        }
-                    } else if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
-                        firstOperand = makeNode(currentToken);
-                        ADVANCE();
-                        if (currentToken.getTokenName().equals(TokenName.INC) || currentToken.getTokenName().equals(TokenName.DEC)) {
-                            secondOperand = makeNode(currentToken);
-                            exInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
-                            if (secondOperand.getToken().getTokenName().equals(TokenName.INC)) {
-                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.POSTINC, null, null, null, null, 0), firstOperand, secondOperand));
-                            } else if (secondOperand.getToken().getTokenName().equals(TokenName.DEC)) {
-                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.POSTDEC, null, null, null, null, 0), firstOperand, secondOperand));
-                            }
-                            exInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
-                            ADVANCE();
-                        } else {
-                            exInput.offerLast(firstOperand);
-                        }
-                    } else {
-                        if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
-                            leftPar++;
-                        } else if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) {
-                            rightPar++;
-                        }
-                        exInput.offerLast(makeNode(currentToken));
-                        ADVANCE();
-                    }
-                }
-
-                exInput.offerLast(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
-                exStack.push(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
-
-                while (!exInput.isEmpty()) {
-                    if (exInput.peekFirst().getToken().getTokenName().equals(TokenName.DEFAULT) && exInput.size() > 0) {
-                        exInput.removeFirst();
-                    } else if (exInput.peekFirst().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && exStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && !operandStack.isEmpty()) {
-                        NEGEXP_NODE.setFirstChild(operatorHolder);
-                        NEGEXP_NODE.setNextSibling(operandStack.pop());
-                        NEGEXP_ROOT.setFirstChild(NEGEXP_NODE);
-                        NEGEXP.setRoot(NEGEXP_ROOT);
-                        break;
-                    } else if (precedenceTable.evaluatePrecedenceArithmetic(exStack.peek().getToken().getTokenName(), exInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER)) {
-                        exStack.push(exInput.removeFirst());
-                    } else if (precedenceTable.evaluatePrecedenceArithmetic(exStack.peek().getToken().getTokenName(), exInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.GREATER)) {
-                        holder = exStack.pop();
-                        if (holder.getToken().getTokenName().equals(TokenName.CONSINT) || holder.getToken().getTokenName().equals(TokenName.CONSFLOAT) || holder.getToken().getTokenName().equals(TokenName.IDENTIFIER) || holder.getToken().getTokenName().equals(TokenName.PREINC) || holder.getToken().getTokenName().equals(TokenName.PREDEC) || holder.getToken().getTokenName().equals(TokenName.POSTINC) || holder.getToken().getTokenName().equals(TokenName.NEGINT) || holder.getToken().getTokenName().equals(TokenName.NEGFLOAT) || holder.getToken().getTokenName().equals(TokenName.NEGIDENTIFIER) || holder.getToken().getTokenName().equals(TokenName.NEGEXP_ROOT)) {
-                            operandStack.push(holder);
-                        } else {
-                            secondOperand = operandStack.pop();
-                            firstOperand = operandStack.pop();
-                            holder.setChildAndSibling(firstOperand, secondOperand);
-                            operandStack.push(holder);
-                        }
-                    } else if (precedenceTable.evaluatePrecedenceArithmetic(exStack.peek().getToken().getTokenName(), exInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
-                        exStack.pop();
-                        exInput.removeFirst();
-                    }
-                }
-            }
-        } else if (!currentToken.getTokenType().equals(TokenType.ARITHMETICOP)) {
-            expressionInput.offerLast(firstOperand);
-        }
-
-        expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
-        expressionInput.offerLast(NEGEXP_ROOT);
-        expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
-        
-        while (!currentToken.getTokenName().equals(TokenName.EOL) && !currentToken.getTokenName().equals(TokenName.COMMA)) {
-            if (currentToken.getTokenName().equals(TokenName.DIFF)) {
-                firstOperand = makeNode(currentToken);
-                ADVANCE();
-                if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
-                    secondOperand = makeNode(currentToken);
-                    expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
-                    if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
-                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
-                    } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
-                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
-                    } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
-                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
-                    }
-                    expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
-                    ADVANCE();
-                }
-            } else if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
-                holder = makeNode(currentToken);
-                ADVANCE();
-                if (currentToken.getTokenName().equals(TokenName.DIFF)) {
-                    expressionInput.offerLast(holder);
-                    firstOperand = makeNode(currentToken);
-                    ADVANCE();
-                    if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
-                        secondOperand = makeNode(currentToken);
-                        if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
-                            expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
-                        } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
-                            expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
-                        } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
-                            expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
-                        }
-                        ADVANCE();
-                        if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) {
-                            expressionInput.offerLast(makeNode(currentToken));
-                            ADVANCE();
-                        }
-                    }
-                } else {
-                    expressionInput.offerLast(holder);
-                    expressionInput.offerLast(makeNode(currentToken));
-                    ADVANCE();
-                }
-            } else if (currentToken.getTokenType().equals(TokenType.ARITHMETICOP)) {
-                holder = makeNode(currentToken);
-                ADVANCE();
-                if (currentToken.getTokenName().equals(TokenName.DIFF)) {
-                    expressionInput.offerLast(holder);
-                    firstOperand = makeNode(currentToken);
-                    ADVANCE();
-                    if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
-                        secondOperand = makeNode(currentToken);
-                        expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
-                        if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
-                            expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
-                        } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
-                            expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
-                        } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
-                            expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
-                        }
-                        expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
-                        ADVANCE();
-                    }
-                } else if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
-                    expressionInput.offerLast(holder);
-                    holder = makeNode(currentToken);
-                    ADVANCE();
-                    if (currentToken.getTokenName().equals(TokenName.DIFF)) {
-                        expressionInput.offerLast(holder);
-                        firstOperand = makeNode(currentToken);
-                        ADVANCE();
-                        if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
-                            secondOperand = makeNode(currentToken);
-                            if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
-                                expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
-                            } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
-                                expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
-                            } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
-                                expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
-                            }
-                            ADVANCE();
-                            if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) {
-                                expressionInput.offerLast(makeNode(currentToken));
-                                ADVANCE();
-                            }
-                        }
-                    } else {
-                        expressionInput.offerLast(holder);
-                        expressionInput.offerLast(makeNode(currentToken));
-                        ADVANCE();
-                    }
-                } else {
-                    expressionInput.offerLast(holder);
-                    expressionInput.offerLast(makeNode(currentToken));
-                    ADVANCE();
-                }
-            } else if (currentToken.getTokenName().equals(TokenName.INC) || currentToken.getTokenName().equals(TokenName.DEC)) {
-                firstOperand = makeNode(currentToken);
-                ADVANCE();
-                if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
-                    secondOperand = makeNode(currentToken);
-                    expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
-                    if (firstOperand.getToken().getTokenName().equals(TokenName.INC)) {
-                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.PREINC, null, null, null, null, 0), firstOperand, secondOperand));
-                    } else if (firstOperand.getToken().getTokenName().equals(TokenName.DEC)) {
-                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.PREDEC, null, null, null, null, 0), firstOperand, secondOperand));
-                    }
-                    expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
-                    ADVANCE();
-                } else {
-                    ERROR = ERROR(TokenName.IDENTIFIER, currentToken, currentToken.getLineNumber());
-                    return new ParseTree(new ParseTreeNode(ERROR, null, null));
-                }
-            } else if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
-                firstOperand = makeNode(currentToken);
-                ADVANCE();
-                if (currentToken.getTokenName().equals(TokenName.INC) || currentToken.getTokenName().equals(TokenName.DEC)) {
-                    secondOperand = makeNode(currentToken);
-                    expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
-                    if (secondOperand.getToken().getTokenName().equals(TokenName.INC)) {
-                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.POSTINC, null, null, null, null, 0), firstOperand, secondOperand));
-                    } else if (secondOperand.getToken().getTokenName().equals(TokenName.DEC)) {
-                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.POSTDEC, null, null, null, null, 0), firstOperand, secondOperand));
-                    }
-                    expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
-                    ADVANCE();
-                } else {
-                    expressionInput.offerLast(firstOperand);
-                }
-            } else {
-                expressionInput.offerLast(makeNode(currentToken));
-                ADVANCE();
-            }
-        }
-
-        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
-        expressionStack.push(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
-
-        while (!expressionInput.isEmpty()) {
-            if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DEFAULT) && expressionInput.size() > 0) {
-                expressionInput.removeFirst();
-            } else if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && !operandStack.isEmpty()) {
-                EXPRESSION_NODE.setFirstChild(operandStack.pop());
-                EXPRESSION.setRoot(EXPRESSION_NODE);
-                return EXPRESSION;
-            } else if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.RIGHTPAR) && expressionInput.peekLast().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.size() == 1) {
-                overReadToken = expressionInput.removeFirst().getToken();
-                EXPRESSION_NODE.setFirstChild(operandStack.pop());
-                EXPRESSION.setRoot(EXPRESSION_NODE);
-                return EXPRESSION;
-            } else if (precedenceTable.evaluatePrecedenceArithmetic(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER)) {
-                expressionStack.push(expressionInput.removeFirst());
-            } else if (precedenceTable.evaluatePrecedenceArithmetic(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.GREATER)) {
-                holder = expressionStack.pop();
-                if (holder.getToken().getTokenName().equals(TokenName.CONSINT) || holder.getToken().getTokenName().equals(TokenName.CONSFLOAT) || holder.getToken().getTokenName().equals(TokenName.IDENTIFIER) || holder.getToken().getTokenName().equals(TokenName.PREINC) || holder.getToken().getTokenName().equals(TokenName.PREDEC) || holder.getToken().getTokenName().equals(TokenName.POSTINC) || holder.getToken().getTokenName().equals(TokenName.NEGINT) || holder.getToken().getTokenName().equals(TokenName.NEGFLOAT) || holder.getToken().getTokenName().equals(TokenName.NEGIDENTIFIER) || holder.getToken().getTokenName().equals(TokenName.NEGEXP_ROOT)) {
-                    operandStack.push(holder);
-                } else {
-                    secondOperand = operandStack.pop();
-                    firstOperand = operandStack.pop();
-                    holder.setChildAndSibling(firstOperand, secondOperand);
-                    operandStack.push(holder);
-                }
-            } else if (precedenceTable.evaluatePrecedenceArithmetic(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
-                expressionStack.pop();
-                expressionInput.removeFirst();
-            }
-        }
-
-        return EXPRESSION;
-    }
-
+    
     public ParseTree NUMERIC_VALUE() throws IOException {
         ParseTreeNode NUMERIC_VALUE_NODE = new ParseTreeNode(new Token(TokenName.NUMERIC_VALUE_NODE, null, null, null, null, 0), null, null); //root node
         ParseTreeNode NUMERIC_NODE = new ParseTreeNode();
@@ -1838,6 +1443,412 @@ public class SyntaxAnalyzer {
         return INPUT;
     }
 
+    public ParseTree ARITHMETIC_EXPRESSION() throws IOException {
+        LinkedList<ParseTreeNode> expressionInput = new LinkedList<>();
+        LinkedList<ParseTreeNode> exInput = new LinkedList<>();
+        Stack<ParseTreeNode> expressionStack = new Stack<>();
+        Stack<ParseTreeNode> operandStack = new Stack<>();
+        Stack<ParseTreeNode> exStack = new Stack<>();
+        Stack<ParseTreeNode> opStack = new Stack<>();
+        
+        OperatorPrecedenceTable precedenceTable = new OperatorPrecedenceTable();
+        
+        ParseTreeNode operatorHolder = new ParseTreeNode();
+        ParseTreeNode holder = new ParseTreeNode();
+        ParseTreeNode firstOperand = new ParseTreeNode();
+        ParseTreeNode secondOperand = new ParseTreeNode();
+        ParseTreeNode EXPRESSION_NODE = new ParseTreeNode(new Token(TokenName.ARITHMETIC_EXPRESSION, null, null, null, null, 0), null, null);
+        ParseTreeNode NEGEXP_NODE = new ParseTreeNode(new Token(TokenName.NEGEXP_NODE, null, null, null, null, 0), null, null);
+        ParseTreeNode NEGEXP_ROOT = new ParseTreeNode(new Token(TokenName.NEGEXP_ROOT, null, null, null, null, 0), null, null);
+        
+        ParseTree EXPRESSION = new ParseTree();
+        ParseTree NEGEXP = new ParseTree();
+        
+        Token ERROR;
+        int leftPar = 0;
+        int rightPar = 0;
+
+        if (currentToken.getTokenName().equals(TokenName.DIFF)) {
+            firstOperand = makeNode(currentToken);
+            operatorHolder = firstOperand;
+            ADVANCE();
+            if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
+                secondOperand = makeNode(currentToken);
+                expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+                if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
+                    expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
+                } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
+                    expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
+                } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
+                    expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
+                }
+                expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
+                ADVANCE();
+            } else if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
+                leftPar++;
+                exInput.offerLast(makeNode(currentToken));
+                ADVANCE();
+                while (leftPar != rightPar) {
+                    if (currentToken.getTokenName().equals(TokenName.DIFF)) {
+                        firstOperand = makeNode(currentToken);
+                        ADVANCE();
+                        if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
+                            secondOperand = makeNode(currentToken);
+                            exInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+                            if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
+                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
+                            } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
+                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
+                            } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
+                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
+                            }
+                            exInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
+                            ADVANCE();
+                        }
+                    } else if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
+                        leftPar++;
+                        holder = makeNode(currentToken);
+                        ADVANCE();
+                        if (currentToken.getTokenName().equals(TokenName.DIFF)) {
+                            exInput.offerLast(holder);
+                            firstOperand = makeNode(currentToken);
+                            ADVANCE();
+                            if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
+                                secondOperand = makeNode(currentToken);
+                                if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
+                                    exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
+                                } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
+                                    exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
+                                } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
+                                    exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
+                                }
+                                ADVANCE();
+                                if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) {
+                                    rightPar++;
+                                    exInput.offerLast(makeNode(currentToken));
+                                    ADVANCE();
+                                }
+                            }
+                        } else {
+                            exInput.offerLast(holder);
+                            exInput.offerLast(makeNode(currentToken));
+                            ADVANCE();
+                        }
+                    } else if (currentToken.getTokenType().equals(TokenType.ARITHMETICOP)) {
+                        holder = makeNode(currentToken);
+                        ADVANCE();
+                        if (currentToken.getTokenName().equals(TokenName.DIFF)) {
+                            exInput.offerLast(holder);
+                            firstOperand = makeNode(currentToken);
+                            ADVANCE();
+                            if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
+                                secondOperand = makeNode(currentToken);
+                                exInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+                                if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
+                                    exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
+                                } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
+                                    exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
+                                } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
+                                    exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
+                                }
+                                exInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
+                                ADVANCE();
+                            }
+                        } else if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
+                            leftPar++;
+                            exInput.offerLast(holder);
+                            holder = makeNode(currentToken);
+                            ADVANCE();
+                            if (currentToken.getTokenName().equals(TokenName.DIFF)) {
+                                exInput.offerLast(holder);
+                                firstOperand = makeNode(currentToken);
+                                ADVANCE();
+                                if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
+                                    secondOperand = makeNode(currentToken);
+                                    if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
+                                        exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
+                                    } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
+                                        exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
+                                    } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
+                                        exInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
+                                    }
+                                    ADVANCE();
+                                    if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) {
+                                        rightPar++;
+                                        exInput.offerLast(makeNode(currentToken));
+                                        ADVANCE();
+                                    }
+                                }
+                            } else {
+                                exInput.offerLast(holder);
+                                exInput.offerLast(makeNode(currentToken));
+                                ADVANCE();
+                            }
+                        } else {
+                            exInput.offerLast(holder);
+                            exInput.offerLast(makeNode(currentToken));
+                            ADVANCE();
+                        }
+                    } else if (currentToken.getTokenName().equals(TokenName.INC) || currentToken.getTokenName().equals(TokenName.DEC)) {
+                        firstOperand = makeNode(currentToken);
+                        ADVANCE();
+                        if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
+                            secondOperand = makeNode(currentToken);
+                            exInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+                            if (firstOperand.getToken().getTokenName().equals(TokenName.INC)) {
+                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.PREINC, null, null, null, null, 0), firstOperand, secondOperand));
+                            } else if (firstOperand.getToken().getTokenName().equals(TokenName.DEC)) {
+                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.PREDEC, null, null, null, null, 0), firstOperand, secondOperand));
+                            }
+                            exInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
+                            ADVANCE();
+                        } else {
+                            ERROR = ERROR(TokenName.IDENTIFIER, currentToken, currentToken.getLineNumber());
+                            return new ParseTree(new ParseTreeNode(ERROR, null, null));
+                        }
+                    } else if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
+                        firstOperand = makeNode(currentToken);
+                        ADVANCE();
+                        if (currentToken.getTokenName().equals(TokenName.INC) || currentToken.getTokenName().equals(TokenName.DEC)) {
+                            secondOperand = makeNode(currentToken);
+                            exInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+                            if (secondOperand.getToken().getTokenName().equals(TokenName.INC)) {
+                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.POSTINC, null, null, null, null, 0), firstOperand, secondOperand));
+                            } else if (secondOperand.getToken().getTokenName().equals(TokenName.DEC)) {
+                                exInput.offerLast(new ParseTreeNode(new Token(TokenName.POSTDEC, null, null, null, null, 0), firstOperand, secondOperand));
+                            }
+                            exInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
+                            ADVANCE();
+                        } else {
+                            exInput.offerLast(firstOperand);
+                        }
+                    } else {
+                        if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
+                            leftPar++;
+                        } else if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) {
+                            rightPar++;
+                        }
+                        exInput.offerLast(makeNode(currentToken));
+                        ADVANCE();
+                    }
+                }
+
+                exInput.offerLast(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
+                exStack.push(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
+
+                while (!exInput.isEmpty()) {
+                    if (exInput.peekFirst().getToken().getTokenName().equals(TokenName.DEFAULT) && exInput.size() > 0) {
+                        exInput.removeFirst();
+                    } else if (exInput.peekFirst().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && exStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && !operandStack.isEmpty()) {
+                        NEGEXP_NODE.setFirstChild(operatorHolder);
+                        NEGEXP_NODE.setNextSibling(operandStack.pop());
+                        NEGEXP_ROOT.setFirstChild(NEGEXP_NODE);
+                        NEGEXP.setRoot(NEGEXP_ROOT);
+                        break;
+                    } else if (precedenceTable.evaluatePrecedenceArithmetic(exStack.peek().getToken().getTokenName(), exInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER)) {
+                        exStack.push(exInput.removeFirst());
+                    } else if (precedenceTable.evaluatePrecedenceArithmetic(exStack.peek().getToken().getTokenName(), exInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.GREATER)) {
+                        holder = exStack.pop();
+                        if (holder.getToken().getTokenName().equals(TokenName.CONSINT) || holder.getToken().getTokenName().equals(TokenName.CONSFLOAT) || holder.getToken().getTokenName().equals(TokenName.IDENTIFIER) || holder.getToken().getTokenName().equals(TokenName.PREINC) || holder.getToken().getTokenName().equals(TokenName.PREDEC) || holder.getToken().getTokenName().equals(TokenName.POSTINC) || holder.getToken().getTokenName().equals(TokenName.NEGINT) || holder.getToken().getTokenName().equals(TokenName.NEGFLOAT) || holder.getToken().getTokenName().equals(TokenName.NEGIDENTIFIER) || holder.getToken().getTokenName().equals(TokenName.NEGEXP_ROOT)) {
+                            operandStack.push(holder);
+                        } else {
+                            secondOperand = operandStack.pop();
+                            firstOperand = operandStack.pop();
+                            holder.setChildAndSibling(firstOperand, secondOperand);
+                            operandStack.push(holder);
+                        }
+                    } else if (precedenceTable.evaluatePrecedenceArithmetic(exStack.peek().getToken().getTokenName(), exInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
+                        exStack.pop();
+                        exInput.removeFirst();
+                    }
+                }
+            }
+        } else if (!currentToken.getTokenType().equals(TokenType.ARITHMETICOP)) {
+            expressionInput.offerLast(firstOperand);
+        }
+
+        expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+        expressionInput.offerLast(NEGEXP_ROOT);
+        expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
+        
+        while (!currentToken.getTokenName().equals(TokenName.EOL) && !currentToken.getTokenName().equals(TokenName.COMMA)) {
+            if (currentToken.getTokenName().equals(TokenName.DIFF)) {
+                firstOperand = makeNode(currentToken);
+                ADVANCE();
+                if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
+                    secondOperand = makeNode(currentToken);
+                    expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+                    if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
+                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
+                    } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
+                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
+                    } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
+                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
+                    }
+                    expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
+                    ADVANCE();
+                }
+            } else if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
+                holder = makeNode(currentToken);
+                ADVANCE();
+                if (currentToken.getTokenName().equals(TokenName.DIFF)) {
+                    expressionInput.offerLast(holder);
+                    firstOperand = makeNode(currentToken);
+                    ADVANCE();
+                    if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
+                        secondOperand = makeNode(currentToken);
+                        if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
+                            expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
+                        } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
+                            expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
+                        } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
+                            expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
+                        }
+                        ADVANCE();
+                        if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) {
+                            expressionInput.offerLast(makeNode(currentToken));
+                            ADVANCE();
+                        }
+                    }
+                } else {
+                    expressionInput.offerLast(holder);
+                    expressionInput.offerLast(makeNode(currentToken));
+                    ADVANCE();
+                }
+            } else if (currentToken.getTokenType().equals(TokenType.ARITHMETICOP)) {
+                holder = makeNode(currentToken);
+                ADVANCE();
+                if (currentToken.getTokenName().equals(TokenName.DIFF)) {
+                    expressionInput.offerLast(holder);
+                    firstOperand = makeNode(currentToken);
+                    ADVANCE();
+                    if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
+                        secondOperand = makeNode(currentToken);
+                        expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+                        if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
+                            expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
+                        } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
+                            expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
+                        } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
+                            expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
+                        }
+                        expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
+                        ADVANCE();
+                    }
+                } else if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
+                    expressionInput.offerLast(holder);
+                    holder = makeNode(currentToken);
+                    ADVANCE();
+                    if (currentToken.getTokenName().equals(TokenName.DIFF)) {
+                        expressionInput.offerLast(holder);
+                        firstOperand = makeNode(currentToken);
+                        ADVANCE();
+                        if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
+                            secondOperand = makeNode(currentToken);
+                            if (secondOperand.getToken().getTokenName().equals(TokenName.CONSINT)) {
+                                expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGINT, null, null, null, null, 0), firstOperand, secondOperand));
+                            } else if (secondOperand.getToken().getTokenName().equals(TokenName.CONSFLOAT)) {
+                                expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGFLOAT, null, null, null, null, 0), firstOperand, secondOperand));
+                            } else if (secondOperand.getToken().getTokenName().equals(TokenName.IDENTIFIER)) {
+                                expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.NEGIDENTIFIER, null, null, null, null, 0), firstOperand, secondOperand));
+                            }
+                            ADVANCE();
+                            if (currentToken.getTokenName().equals(TokenName.RIGHTPAR)) {
+                                expressionInput.offerLast(makeNode(currentToken));
+                                ADVANCE();
+                            }
+                        }
+                    } else {
+                        expressionInput.offerLast(holder);
+                        expressionInput.offerLast(makeNode(currentToken));
+                        ADVANCE();
+                    }
+                } else {
+                    expressionInput.offerLast(holder);
+                    expressionInput.offerLast(makeNode(currentToken));
+                    ADVANCE();
+                }
+            } else if (currentToken.getTokenName().equals(TokenName.INC) || currentToken.getTokenName().equals(TokenName.DEC)) {
+                firstOperand = makeNode(currentToken);
+                ADVANCE();
+                if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
+                    secondOperand = makeNode(currentToken);
+                    expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+                    if (firstOperand.getToken().getTokenName().equals(TokenName.INC)) {
+                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.PREINC, null, null, null, null, 0), firstOperand, secondOperand));
+                    } else if (firstOperand.getToken().getTokenName().equals(TokenName.DEC)) {
+                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.PREDEC, null, null, null, null, 0), firstOperand, secondOperand));
+                    }
+                    expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
+                    ADVANCE();
+                } else {
+                    ERROR = ERROR(TokenName.IDENTIFIER, currentToken, currentToken.getLineNumber());
+                    return new ParseTree(new ParseTreeNode(ERROR, null, null));
+                }
+            } else if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
+                firstOperand = makeNode(currentToken);
+                ADVANCE();
+                if (currentToken.getTokenName().equals(TokenName.INC) || currentToken.getTokenName().equals(TokenName.DEC)) {
+                    secondOperand = makeNode(currentToken);
+                    expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+                    if (secondOperand.getToken().getTokenName().equals(TokenName.INC)) {
+                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.POSTINC, null, null, null, null, 0), firstOperand, secondOperand));
+                    } else if (secondOperand.getToken().getTokenName().equals(TokenName.DEC)) {
+                        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.POSTDEC, null, null, null, null, 0), firstOperand, secondOperand));
+                    }
+                    expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
+                    ADVANCE();
+                } else {
+                    expressionInput.offerLast(firstOperand);
+                }
+            } else {
+                expressionInput.offerLast(makeNode(currentToken));
+                ADVANCE();
+            }
+        }
+
+        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
+        expressionStack.push(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
+
+        while (!expressionInput.isEmpty()) {
+            if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DEFAULT) && expressionInput.size() > 0) {
+                expressionInput.removeFirst();
+            } else if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && !operandStack.isEmpty()) {
+                EXPRESSION_NODE.setFirstChild(operandStack.pop());
+                EXPRESSION.setRoot(EXPRESSION_NODE);
+                return EXPRESSION;
+            } else if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.RIGHTPAR) && expressionInput.peekLast().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.size() == 1) {
+                overReadToken = expressionInput.removeFirst().getToken();
+                EXPRESSION_NODE.setFirstChild(operandStack.pop());
+                EXPRESSION.setRoot(EXPRESSION_NODE);
+                return EXPRESSION;
+            } else if (precedenceTable.evaluatePrecedenceArithmetic(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER)) {
+                expressionStack.push(expressionInput.removeFirst());
+            } else if (precedenceTable.evaluatePrecedenceArithmetic(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.GREATER)) {
+                holder = expressionStack.pop();
+                if (holder.getToken().getTokenName().equals(TokenName.CONSINT) || holder.getToken().getTokenName().equals(TokenName.CONSFLOAT) || holder.getToken().getTokenName().equals(TokenName.IDENTIFIER) || holder.getToken().getTokenName().equals(TokenName.PREINC) || holder.getToken().getTokenName().equals(TokenName.PREDEC) || holder.getToken().getTokenName().equals(TokenName.POSTINC) || holder.getToken().getTokenName().equals(TokenName.NEGINT) || holder.getToken().getTokenName().equals(TokenName.NEGFLOAT) || holder.getToken().getTokenName().equals(TokenName.NEGIDENTIFIER) || holder.getToken().getTokenName().equals(TokenName.NEGEXP_ROOT)) {
+                    operandStack.push(holder);
+                } else {
+                    secondOperand = operandStack.pop();
+                    firstOperand = operandStack.pop();
+                    holder.setChildAndSibling(firstOperand, secondOperand);
+                    operandStack.push(holder);
+                }
+            } else if (precedenceTable.evaluatePrecedenceArithmetic(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
+                expressionStack.pop();
+                expressionInput.removeFirst();
+            }
+        }
+
+        return EXPRESSION;
+    }
+    
+    public ParseTree LOGICAL_EXPRESSION() throws IOException {
+        ParseTreeNode EXPRESSION_NODE = new ParseTreeNode(new Token(TokenName.LOGICAL_EXPRESSION, null, null, null, null, 0), null, null);
+        ParseTree EXPRESSION = new ParseTree();
+        
+        return EXPRESSION;
+    }
     //C:\Users\Theodore Arnel Merin\Documents\sample.txt
     //'Ã¿'
     public void sourceScanner(String absPath) throws FileNotFoundException, IOException {

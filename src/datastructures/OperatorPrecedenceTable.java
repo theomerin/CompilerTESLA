@@ -1,15 +1,16 @@
 package datastructures;
 
 public class OperatorPrecedenceTable {
-    
+
     public OperatorPrecedenceTable() {
-        
+
     }
+
     public OperatorPrecedence evaluatePrecedenceArithmetic(TokenName previous, TokenName current) {
-        switch(previous) {
+        switch (previous) {
             case SUM:
             case DIFF:
-                switch(current) {
+                switch (current) {
                     case SUM:
                     case DIFF:
                     case RIGHTPAR:
@@ -26,7 +27,7 @@ public class OperatorPrecedenceTable {
                     case PREINC:
                     case PREDEC:
                     case POSTINC:
-                    case POSTDEC: 
+                    case POSTDEC:
                     case NEGINT:
                     case NEGFLOAT:
                     case NEGIDENTIFIER:
@@ -37,7 +38,7 @@ public class OperatorPrecedenceTable {
             case PROD:
             case DIV:
             case MOD:
-                switch(current) {
+                switch (current) {
                     case SUM:
                     case DIFF:
                     case PROD:
@@ -63,7 +64,7 @@ public class OperatorPrecedenceTable {
                 }
                 break;
             case POW:
-                switch(current) {
+                switch (current) {
                     case SUM:
                     case DIFF:
                     case PROD:
@@ -89,7 +90,7 @@ public class OperatorPrecedenceTable {
                 }
                 break;
             case LEFTPAR:
-                switch(current) {
+                switch (current) {
                     case SUM:
                     case DIFF:
                     case PROD:
@@ -127,14 +128,14 @@ public class OperatorPrecedenceTable {
             case NEGFLOAT:
             case NEGIDENTIFIER:
             case NEGEXP_ROOT:
-                switch(current) {
+                switch (current) {
                     case SUM:
                     case DIFF:
                     case PROD:
                     case DIV:
                     case MOD:
                     case POW:
-                    case RIGHTPAR:    
+                    case RIGHTPAR:
                     case DOLLAR_OPERATOR:
                         return OperatorPrecedence.GREATER;
                     case LEFTPAR:
@@ -153,7 +154,7 @@ public class OperatorPrecedenceTable {
                 }
                 break;
             case DOLLAR_OPERATOR:
-                switch(current) {
+                switch (current) {
                     case SUM:
                     case DIFF:
                     case PROD:
@@ -167,7 +168,7 @@ public class OperatorPrecedenceTable {
                     case PREINC:
                     case PREDEC:
                     case POSTINC:
-                    case POSTDEC:   
+                    case POSTDEC:
                     case NEGINT:
                     case NEGFLOAT:
                     case NEGIDENTIFIER:
@@ -183,87 +184,37 @@ public class OperatorPrecedenceTable {
         }
         return OperatorPrecedence.ERROR;
     }
-    
-     public OperatorPrecedence evaluatePrecedenceRelationalAndLogical(TokenName previous, TokenName current) {
-         switch (previous) {
-            case OPGREAT:
-            case OPLESS:
-            case OPGREQ:
-            case OPLEQ:
-                switch (current) {
-                    case OPGREAT:
-                    case OPLESS:
-                    case OPGREQ:
-                    case OPLEQ:
-                    case OPEQUAL:
-                    case OPNOT:
-                    case LOGICAND:
-                    case LOGICOR:
-                    case RIGHTPAR:
-                    case DOLLAR_OPERATOR: 
-                        return OperatorPrecedence.GREATER;
-                    case LOGICNOT:
-                    case LEFTPAR:
-                        return OperatorPrecedence.LESSER;
-                 }
-                 break;
-            case OPEQUAL:
-            case OPNOT:
-                switch (current) {
-                    case OPGREAT:
-                    case OPLESS:
-                    case OPGREQ:
-                    case OPLEQ:
-                    case LOGICNOT:
-                    case LEFTPAR:
-                        return OperatorPrecedence.LESSER;
-                    case OPEQUAL:
-                    case OPNOT:
-                    case LOGICAND:
-                    case LOGICOR:
-                    case RIGHTPAR:
-                    case DOLLAR_OPERATOR: 
-                        return OperatorPrecedence.GREATER;
-                }
-                break;
-            case LOGICNOT:
-                if (current.equals(TokenName.LEFTPAR)) {
-                    return OperatorPrecedence.LESSER;
-                } else {
-                    return OperatorPrecedence.GREATER;
-                }
+
+    public OperatorPrecedence evaluatePrecedenceAndLogical(TokenName previous, TokenName current) {
+        switch (previous) {
             case LOGICAND:
             case LOGICOR:
                 switch (current) {
-                    case OPGREAT:
-                    case OPLESS:
-                    case OPGREQ:
-                    case OPLEQ:
-                    case OPEQUAL:
-                    case OPNOT:
-                    case LOGICNOT:
-                    case LEFTPAR:
-                        return OperatorPrecedence.LESSER;
                     case LOGICAND:
                     case LOGICOR:
                     case RIGHTPAR:
                     case DOLLAR_OPERATOR:
                         return OperatorPrecedence.GREATER;
+                    case LEFTPAR:
+                    case IDENTIFIER:
+                    case AFFIRM:
+                    case NEGATE:
+                    case NEGBOOL:
+                    case RELATIONAL_EXPRESSION:
+                        return OperatorPrecedence.LESSER;
                 }
                 break;
             case LEFTPAR:
                 switch (current) {
-                    case OPGREAT:
-                    case OPLESS:
-                    case OPGREQ:
-                    case OPLEQ:
-                    case OPEQUAL:
-                    case OPNOT:
-                    case LOGICNOT:
-                    case LEFTPAR:
                     case LOGICAND:
                     case LOGICOR:
-                        return OperatorPrecedence.GREATER;
+                    case LEFTPAR:
+                    case IDENTIFIER:
+                    case AFFIRM:
+                    case NEGATE:
+                    case NEGBOOL:
+                    case RELATIONAL_EXPRESSION:
+                        return OperatorPrecedence.LESSER;
                     case RIGHTPAR:
                         return OperatorPrecedence.EQUAL;
                     case DOLLAR_OPERATOR:
@@ -271,31 +222,42 @@ public class OperatorPrecedenceTable {
                 }
                 break;
             case RIGHTPAR:
-                if (current.equals(TokenName.LEFTPAR)) {
-                    return OperatorPrecedence.ERROR;
-                } else {
-                    return OperatorPrecedence.GREATER;
-                }
-            case DOLLAR_OPERATOR:
+            case IDENTIFIER:
+            case AFFIRM:
+            case NEGATE:
+            case NEGBOOL:
+            case RELATIONAL_EXPRESSION:
                 switch (current) {
-                    case OPGREAT:
-                    case OPLESS:
-                    case OPGREQ:
-                    case OPLEQ:
-                    case OPEQUAL:
-                    case OPNOT:
-                    case LOGICNOT:
-                    case LEFTPAR:
                     case LOGICAND:
                     case LOGICOR:
+                    case RIGHTPAR:
+                    case DOLLAR_OPERATOR:
+                        return OperatorPrecedence.GREATER;
+                    case LEFTPAR:
+                    case IDENTIFIER:
+                    case AFFIRM:
+                    case NEGATE:
+                    case NEGBOOL:
+                    case RELATIONAL_EXPRESSION:
+                        return OperatorPrecedence.ERROR;
+                }
+                break;
+            case DOLLAR_OPERATOR:
+                switch (current) {
+                    case LOGICAND:
+                    case LOGICOR:
+                    case LEFTPAR:
+                    case IDENTIFIER:
+                    case AFFIRM:
+                    case NEGATE:
+                    case NEGBOOL:
+                    case RELATIONAL_EXPRESSION:
                         return OperatorPrecedence.LESSER;
                     case RIGHTPAR:
                     case DOLLAR_OPERATOR:
                         return OperatorPrecedence.ERROR;
                 }
                 break;
-            default:
-                return OperatorPrecedence.ERROR;
         }
         return OperatorPrecedence.ERROR;
     }

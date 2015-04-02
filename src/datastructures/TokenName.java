@@ -16,6 +16,8 @@ public enum TokenName {
     POSTINC,
     POSTDEC,
     ARITHMETIC_EXPRESSION,
+    RELATIONAL_EXPRESSION,
+    LOGICAL_EXPRESSION,
     NEGEXP_NODE,
     NEGEXP_ROOT,
     
@@ -39,6 +41,7 @@ public enum TokenName {
     
     AFFIRM,     //true
     NEGATE,     //false
+    NEGBOOL,
     
     IF,         //if
     ENDIF,
