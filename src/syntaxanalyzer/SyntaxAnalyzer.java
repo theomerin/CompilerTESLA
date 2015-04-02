@@ -13,6 +13,7 @@ public class SyntaxAnalyzer {
     ParseTree parseTree = new ParseTree();
     Token currentToken;
     Token overReadToken = new Token();
+    int unmatchedLeftPar = 0;
 
     public SyntaxAnalyzer() throws FileNotFoundException, IOException {
 
@@ -255,6 +256,8 @@ public class SyntaxAnalyzer {
         Token ERROR;
 
         if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
+            currentToken.setDataType(DataType.INTEGER);
+            lex.SymbolTable.putIfAbsent(currentToken.getLexeme(), currentToken);
             IDENTIFIER = makeNode(currentToken); //current child
             ADVANCE(); //consume next token
             NUMERIC_ASSIGN = NUMERIC_ASSIGN(TokenName.CONSINT);
@@ -351,6 +354,8 @@ public class SyntaxAnalyzer {
         Token ERROR;
 
         if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
+            currentToken.setDataType(DataType.FLOATING_POINT);
+            lex.SymbolTable.putIfAbsent(currentToken.getLexeme(), currentToken);
             IDENTIFIER = makeNode(currentToken); //current child
             ADVANCE(); //consume next token
             NUMERIC_ASSIGN = NUMERIC_ASSIGN(TokenName.CONSFLOAT);
@@ -639,6 +644,8 @@ public class SyntaxAnalyzer {
         Token ERROR;
 
         if (currentToken.getTokenName().equals(TokenName.IDENTIFIER)) {
+            currentToken.setDataType(DataType.BOOLEAN);
+            lex.SymbolTable.putIfAbsent(currentToken.getLexeme(), currentToken);
             IDENTIFIER = makeNode(currentToken); //current child
             ADVANCE(); //consume next token
             BOOL_ASSIGN = BOOL_ASSIGN();
@@ -708,7 +715,7 @@ public class SyntaxAnalyzer {
             ASSIGNOPP = makeNode(currentToken); //current child
             ADVANCE(); //consume next token
             BOOL_VALUE = LOGICAL_EXPRESSION();
-            
+
             if (BOOL_VALUE.root.getToken().getTokenName().equals(TokenName.LOGICAL_EXPRESSION)) {
                 BOOL_ASSIGN = new ParseTree(new ParseTreeNode(new Token(TokenName.BOOL_ASSIGN, null, null, null, null, 0), null, null));
                 BOOL_ASSIGN_NODE = new ParseTreeNode(new Token(TokenName.BOOL_ASSIGN, null, null, null, null, 0), null, null);
@@ -1373,6 +1380,8 @@ public class SyntaxAnalyzer {
         ParseTreeNode EOL = new ParseTreeNode();
         ParseTree OUTPUT = new ParseTree();
         Token ERROR;
+        boolean loopBreak = true;
+        DataType type;
 
         if (currentToken.getTokenName().equals(TokenName.TRANSMIT)) {
             TRANSMIT = makeNode(currentToken);
@@ -1380,7 +1389,43 @@ public class SyntaxAnalyzer {
             if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
                 LEFTPAR = makeNode(currentToken);
                 ADVANCE();
-                EXPRESSION = ARITHMETIC_EXPRESSION();
+                while (loopBreak) {
+                    switch (currentToken.getTokenName()) {
+                        case LOGICNOT:
+                        case AFFIRM:
+                        case NEGATE:
+                            EXPRESSION = LOGICAL_EXPRESSION();
+                            loopBreak = false;
+                            break;
+                        case DIFF:
+                        case CONSINT:
+                        case CONSFLOAT:
+                            EXPRESSION = ARITHMETIC_EXPRESSION();
+                            loopBreak = false;
+                            break;
+                        case LEFTPAR:
+                            unmatchedLeftPar++;
+                            ADVANCE();
+                            break;
+                        case IDENTIFIER:
+                            type = lex.SymbolTable.get(currentToken.getLexeme()).getDataType();
+                            switch(type) {
+                                case INTEGER:
+                                case FLOATING_POINT:
+                                    EXPRESSION = ARITHMETIC_EXPRESSION();
+                                    loopBreak = false;
+                                    break;
+                                case BOOLEAN:
+                                    EXPRESSION = LOGICAL_EXPRESSION();
+                                    loopBreak = false;
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                    }
+                }
+                //EXPRESSION = ARITHMETIC_EXPRESSION();
                 if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) {
                     RIGHTPAR = makeNode(overReadToken);
                     if (currentToken.getTokenName().equals(TokenName.EOL)) {
@@ -1474,6 +1519,11 @@ public class SyntaxAnalyzer {
         int leftPar = 0;
         int rightPar = 0;
 
+        while(unmatchedLeftPar != 0) {
+            expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+            unmatchedLeftPar--;
+        }
+        
         if (currentToken.getTokenName().equals(TokenName.DIFF)) {
             firstOperand = makeNode(currentToken);
             operatorHolder = firstOperand;
@@ -1868,6 +1918,11 @@ public class SyntaxAnalyzer {
         ParseTree NOTEXP = new ParseTree();
 
         Token ERROR;
+        
+        while(unmatchedLeftPar != 0) {
+            expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+            unmatchedLeftPar--;
+        }
 
         while (!currentToken.getTokenName().equals(TokenName.EOL) && !currentToken.getTokenName().equals(TokenName.COMMA)) {
             expressionInput.offerLast(makeNode(currentToken));
@@ -1890,10 +1945,11 @@ public class SyntaxAnalyzer {
             } else if (precedenceTable.evaluatePrecedenceLogical(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.DO_NOT)) {
                 firstOperand = expressionStack.pop();
                 secondOperand = expressionInput.removeFirst();
-                //expressionInput.offerFirst(new ParseTreeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0), null, null));
+                expressionInput.offerFirst(new ParseTreeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0), null, null));
                 expressionInput.offerFirst(new ParseTreeNode(new Token(TokenName.NOTEXP_NODE, null, null, null, null, 0), firstOperand, secondOperand));
-                //expressionInput.offerFirst(new ParseTreeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0), null, null));
+                expressionInput.offerFirst(new ParseTreeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0), null, null));
             } else if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.RIGHTPAR) && expressionInput.peekLast().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.size() == 1) {
+                EXPRESSION_NODE = new ParseTreeNode(new Token(TokenName.LOGICAL_EXPRESSION, null, null, null, null, 0), null, null);
                 overReadToken = expressionInput.removeFirst().getToken();
                 EXPRESSION_NODE.setFirstChild(operandStack.pop());
                 EXPRESSION.setRoot(EXPRESSION_NODE);
@@ -1902,6 +1958,9 @@ public class SyntaxAnalyzer {
                 holder = expressionStack.pop();
                 if (holder.getToken().getTokenName().equals(TokenName.AFFIRM) || holder.getToken().getTokenName().equals(TokenName.NEGATE) || holder.getToken().getTokenName().equals(TokenName.IDENTIFIER) || holder.getToken().getTokenName().equals(TokenName.NOTEXP_NODE)) {
                     operandStack.push(holder);
+                } else if (holder.getToken().getTokenName().equals(TokenName.LOGICNOT) || operandStack.size() == 1) {
+                    secondOperand = operandStack.pop();
+                    operandStack.push(new ParseTreeNode(new Token(TokenName.NOTEXP_NODE, null, null, null, null, 0), holder, secondOperand));
                 } else {
                     secondOperand = operandStack.pop();
                     firstOperand = operandStack.pop();
@@ -1921,7 +1980,7 @@ public class SyntaxAnalyzer {
 
         return EXPRESSION;
     }
-        //C:\Users\Theodore Arnel Merin\Documents\sample.txt
+    //C:\Users\Theodore Arnel Merin\Documents\sample.txt
     //'Ã¿'
 
     public void sourceScanner(String absPath) throws FileNotFoundException, IOException {

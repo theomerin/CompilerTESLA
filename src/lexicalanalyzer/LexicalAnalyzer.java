@@ -9,7 +9,7 @@ import java.util.*;
 
 public class LexicalAnalyzer {
 
-    private HashMap<String, Token> SymbolTable;
+    public HashMap<String, Token> SymbolTable;
     File f;
     FileInputStream source;
     BufferedInputStream in;

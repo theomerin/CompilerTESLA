@@ -5,7 +5,7 @@ public class Token {
     private TokenType Type;
     private String Lexeme;
     private Object Value;
-    private Object DataType;
+    private DataType DataType;
     private int LineNumber;
     
     public Token() {
@@ -17,7 +17,7 @@ public class Token {
         LineNumber = 0;
     }
     
-    public Token(TokenName name, TokenType type, String lexeme, Object value, Object datatype, int linenumber) {
+    public Token(TokenName name, TokenType type, String lexeme, Object value, DataType datatype, int linenumber) {
         Name = name;
         Type = type;
         Lexeme = lexeme;
@@ -48,5 +48,13 @@ public class Token {
     
     public int getLineNumber() {
         return LineNumber;
+    }
+    
+    public DataType getDataType() {
+        return DataType;
+    }
+    
+    public void setDataType(DataType datatype) {
+        DataType = datatype;
     }
 }
