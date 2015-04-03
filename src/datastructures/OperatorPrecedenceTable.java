@@ -282,4 +282,139 @@ public class OperatorPrecedenceTable {
         }
         return OperatorPrecedence.ERROR;
     }
+
+    public OperatorPrecedence evaluatePrecedenceRelational(TokenName previous, TokenName current) {
+        switch (previous) {
+            case OPGREAT:
+            case OPLESS:
+            case OPGREQ:
+            case OPLEQ:
+                switch (current) {
+                    case OPGREAT:
+                    case OPLESS:
+                    case OPGREQ:
+                    case OPLEQ:
+                    case OPEQUAL:
+                    case OPNOT:
+                    case RIGHTPAR:
+                    case DOLLAR_OPERATOR:
+                        return OperatorPrecedence.GREATER;
+                    case LEFTPAR:
+                    case IDENTIFIER:
+                    case CONSINT:
+                    case CONSFLOAT:
+                    case LOGICAL_EXPRESSION:
+                    case ARITHMETIC_EXPRESSION:
+                        return OperatorPrecedence.LESSER;
+                }
+                break;
+            case OPEQUAL:
+            case OPNOT:
+                switch (current) {
+                    case OPGREAT:
+                    case OPLESS:
+                    case OPGREQ:
+                    case OPLEQ:
+                    case LEFTPAR:
+                    case IDENTIFIER:
+                    case CONSINT:
+                    case CONSFLOAT:
+                    case LOGICAL_EXPRESSION:
+                    case ARITHMETIC_EXPRESSION:
+                        return OperatorPrecedence.LESSER;
+                    case OPEQUAL:
+                    case OPNOT:
+                    case RIGHTPAR:
+                    case DOLLAR_OPERATOR:
+                        return OperatorPrecedence.GREATER;
+                }
+                break;
+            case LEFTPAR:
+                switch (current) {
+                    case OPGREAT:
+                    case OPLESS:
+                    case OPGREQ:
+                    case OPLEQ:
+                    case LEFTPAR:
+                    case OPEQUAL:
+                    case OPNOT:
+                    case IDENTIFIER:
+                    case CONSINT:
+                    case CONSFLOAT:
+                    case LOGICAL_EXPRESSION:
+                    case ARITHMETIC_EXPRESSION:
+                        return OperatorPrecedence.LESSER;
+                    case RIGHTPAR:
+                        return OperatorPrecedence.EQUAL;
+                    case DOLLAR_OPERATOR:
+                        return OperatorPrecedence.GREATER;
+                }
+                break;
+            case RIGHTPAR:
+                switch (current) {
+                    case OPGREAT:
+                    case OPLESS:
+                    case OPGREQ:
+                    case OPLEQ:
+                    case OPEQUAL:
+                    case OPNOT:
+                    case RIGHTPAR:
+                    case DOLLAR_OPERATOR:
+                        return OperatorPrecedence.GREATER;
+                    case LEFTPAR:
+                    case IDENTIFIER:
+                    case CONSINT:
+                    case CONSFLOAT:
+                    case LOGICAL_EXPRESSION:
+                    case ARITHMETIC_EXPRESSION:
+                        return OperatorPrecedence.ERROR;
+                }
+                break;
+            case IDENTIFIER:
+            case CONSINT:
+            case CONSFLOAT:
+            case LOGICAL_EXPRESSION:
+            case ARITHMETIC_EXPRESSION:
+                switch(current) {
+                    case OPGREAT:
+                    case OPLESS:
+                    case OPGREQ:
+                    case OPLEQ:
+                    case OPEQUAL:
+                    case OPNOT:
+                    case RIGHTPAR:
+                    case DOLLAR_OPERATOR:
+                        return OperatorPrecedence.GREATER;
+                    case LEFTPAR:
+                    case IDENTIFIER:
+                    case CONSINT:
+                    case CONSFLOAT:
+                    case LOGICAL_EXPRESSION:
+                    case ARITHMETIC_EXPRESSION:
+                        return OperatorPrecedence.ERROR;
+                }
+                break;
+            case DOLLAR_OPERATOR:
+                switch(current) {
+                    case OPGREAT:
+                    case OPLESS:
+                    case OPGREQ:
+                    case OPLEQ:
+                    case OPEQUAL:
+                    case OPNOT:
+                    case LEFTPAR:
+                    case IDENTIFIER:
+                    case CONSINT:
+                    case CONSFLOAT:
+                    case LOGICAL_EXPRESSION:
+                    case ARITHMETIC_EXPRESSION:
+                        return OperatorPrecedence.LESSER;
+                    case RIGHTPAR:
+                    case DOLLAR_OPERATOR:
+                        return OperatorPrecedence.ERROR;
+                }
+                break;
+        }
+        return OperatorPrecedence.ERROR;
+    }
 }

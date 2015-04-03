@@ -14,5 +14,6 @@ public enum DataType {
     FLOATING_POINT,
     CHARACTER,
     STRING,
-    BOOLEAN
+    BOOLEAN,
+    NULL,
 }

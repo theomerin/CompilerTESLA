@@ -26,7 +26,13 @@ public class SyntaxAnalyzer {
     public Token ERROR(TokenName expectedToken, Token currentToken, int lineNumber) {
         String ANSI_RED = "\u001B[31m";
         String ANSI_RESET = "\u001B[0m";
-        System.out.println(ANSI_RED + "PARSING NOT SUCCESSFUL: Token Expected: " + expectedToken + ". Token Found at line number (" + lineNumber + "): " + currentToken.getTokenName() + " Lexeme of: " + currentToken.getLexeme());
+        if (expectedToken.equals(TokenName.DATA_TYPE_MISMATCH)) {
+            System.out.println(ANSI_RED + "PARSING NOT SUCCESSFUL: " + expectedToken + " of token found at line number (" + lineNumber + "): " + currentToken.getTokenName() + " Lexeme of: " + currentToken.getLexeme());
+        } else if (expectedToken.equals(TokenName.IDENTIFIER_NOT_DECLARED)) {
+            System.out.println(ANSI_RED + "PARSING NOT SUCCESSFUL: " + expectedToken + " at line number (" + lineNumber + "): " + currentToken.getTokenName() + " Lexeme of: " + currentToken.getLexeme());
+        } else {
+            System.out.println(ANSI_RED + "PARSING NOT SUCCESSFUL: Token Expected: " + expectedToken + ". token found at line number (" + lineNumber + "): " + currentToken.getTokenName() + " Lexeme of: " + currentToken.getLexeme());
+        }
         System.out.print(ANSI_RESET);
         return new Token(TokenName.ERROR, null, null, null, null, lineNumber);
     }
@@ -221,8 +227,6 @@ public class SyntaxAnalyzer {
                 PROGRAM_BODY_NODE.setToken(new Token(TokenName.PROGRAM_BODY, null, null, null, null, 0));
                 return PROGRAM_BODY;
 
-//            case EXECUTE:
-//            case DURING:
             case IDENTIFIER:
             case INC:
             case DEC:
@@ -1179,7 +1183,7 @@ public class SyntaxAnalyzer {
                 LEFTPAR = makeNode(currentToken);
                 ADVANCE();
                 // Build/Create a grammar and code for Reg Exp
-                RegExp = LOGICAL_EXPRESSION();
+                RegExp = RELATIONAL_EXPRESSION();
                 // ADVANCE();
                 if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) {
                     RIGHTPAR = makeNode(currentToken);
@@ -1282,7 +1286,7 @@ public class SyntaxAnalyzer {
                 // Build/Create a grammar and code for Reg Exp
                 // RegExp = REXP();
                 //ADVANCE();
-                RegExp = LOGICAL_EXPRESSION();
+                RegExp = RELATIONAL_EXPRESSION();
                 if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) {
                     RIGHTPAR = makeNode(currentToken);
                     //ADVANCE();
@@ -1427,7 +1431,7 @@ public class SyntaxAnalyzer {
                 LEFTPAR = makeNode(currentToken);
                 ADVANCE();
                 // Build/Create a grammar and code for Reg Exp
-                RegExp = LOGICAL_EXPRESSION();
+                RegExp = RELATIONAL_EXPRESSION();
                 // ADVANCE();
                 if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) {
                     RIGHTPAR = makeNode(currentToken);
@@ -1519,7 +1523,7 @@ public class SyntaxAnalyzer {
                             LEFTPAR = makeNode(currentToken);
                             ADVANCE();
                             // Build/Create a grammar and code for Reg Exp
-                            RegExp = LOGICAL_EXPRESSION();
+                            RegExp = RELATIONAL_EXPRESSION();
                             // ADVANCE();
                             if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) {
                                 RIGHTPAR = makeNode(currentToken);
@@ -1575,7 +1579,7 @@ public class SyntaxAnalyzer {
         ParseTree OUTPUT = new ParseTree();
         Token ERROR;
         boolean loopBreak = true;
-        DataType type;
+        DataType type = DataType.NULL;
 
         if (currentToken.getTokenName().equals(TokenName.TRANSMIT)) {
             TRANSMIT = makeNode(currentToken);
@@ -1602,7 +1606,12 @@ public class SyntaxAnalyzer {
                             ADVANCE();
                             break;
                         case IDENTIFIER:
-                            type = lex.SymbolTable.get(currentToken.getLexeme()).getDataType();
+                            try {
+                                type = lex.SymbolTable.get(currentToken.getLexeme()).getDataType();
+                            } catch (Exception e) {
+                                ERROR = ERROR(TokenName.IDENTIFIER_NOT_DECLARED, currentToken, currentToken.getLineNumber());
+                                System.exit(0);
+                            }
                             switch (type) {
                                 case INTEGER:
                                 case FLOATING_POINT:
@@ -1922,7 +1931,7 @@ public class SyntaxAnalyzer {
         expressionInput.offerLast(NEGEXP_ROOT);
         expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
 
-        while (!currentToken.getTokenName().equals(TokenName.EOL) && !currentToken.getTokenName().equals(TokenName.COMMA)) {
+        while (!currentToken.getTokenName().equals(TokenName.EOL) && !currentToken.getTokenName().equals(TokenName.COMMA) && !currentToken.getTokenType().equals(TokenType.RELOP)) {
             if (currentToken.getTokenName().equals(TokenName.DIFF)) {
                 firstOperand = makeNode(currentToken);
                 ADVANCE();
@@ -2119,7 +2128,7 @@ public class SyntaxAnalyzer {
             unmatchedLeftPar--;
         }
 
-        while (!currentToken.getTokenName().equals(TokenName.EOL) && !currentToken.getTokenName().equals(TokenName.COMMA) && !currentToken.getTokenName().equals(TokenName.LEFTBRACE)) {
+        while (!currentToken.getTokenName().equals(TokenName.EOL) && !currentToken.getTokenName().equals(TokenName.COMMA) && !currentToken.getTokenName().equals(TokenName.LEFTBRACE) && !currentToken.getTokenType().equals(TokenType.RELOP)) {
             expressionInput.offerLast(makeNode(currentToken));
             ADVANCE();
         }
@@ -2162,7 +2171,7 @@ public class SyntaxAnalyzer {
                     holder.setChildAndSibling(firstOperand, secondOperand);
                     operandStack.push(holder);
                 }
-            } else if (precedenceTable.evaluatePrecedenceArithmetic(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
+            } else if (precedenceTable.evaluatePrecedenceLogical(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
                 expressionStack.pop();
                 expressionInput.removeFirst();
                 if (expressionStack.peek().getToken().getTokenName().equals(TokenName.LOGICNOT) && (operandStack.peek().getToken().getTokenName().equals(TokenName.AFFIRM) || operandStack.peek().getToken().getTokenName().equals(TokenName.NEGATE) || operandStack.peek().getToken().getTokenName().equals(TokenName.IDENTIFIER) || operandStack.peek().getToken().getTokenName().equals(TokenName.NOTEXP_NODE))) {
@@ -2170,6 +2179,150 @@ public class SyntaxAnalyzer {
                     secondOperand = operandStack.pop();
                     operandStack.push(new ParseTreeNode(new Token(TokenName.NOTEXP_NODE, null, null, null, null, 0), firstOperand, secondOperand));
                 }
+            }
+        }
+
+        return EXPRESSION;
+    }
+
+    public ParseTree RELATIONAL_EXPRESSION() throws IOException {
+        LinkedList<ParseTreeNode> expressionInput = new LinkedList<>();
+        Stack<ParseTreeNode> expressionStack = new Stack<>();
+        Stack<ParseTreeNode> operandStack = new Stack<>();
+
+        OperatorPrecedenceTable precedenceTable = new OperatorPrecedenceTable();
+
+        ParseTreeNode operatorHolder = new ParseTreeNode();
+        ParseTreeNode holder = new ParseTreeNode();
+        ParseTreeNode firstOperand = new ParseTreeNode();
+        ParseTreeNode secondOperand = new ParseTreeNode();
+        ParseTreeNode EXPRESSION_NODE = new ParseTreeNode(new Token(TokenName.EMPTY, null, null, null, null, 0), null, null);
+        ParseTreeNode ARITHMETIC_EXPRESSION = new ParseTreeNode(new Token(TokenName.ARITHMETIC_EXPRESSION, null, null, null, null, 0), null, null);
+        ParseTreeNode LOGICAL_EXPRESSION = new ParseTreeNode(new Token(TokenName.LOGICAL_EXPRESSION, null, null, null, null, 0), null, null);
+
+        ParseTree EXPRESSION = new ParseTree();
+        ParseTree NOTEXP = new ParseTree();
+
+        Token ERROR;
+        boolean loopBreak = true;
+        DataType type = DataType.NULL;
+
+        while (!currentToken.getTokenName().equals(TokenName.EOL) && !currentToken.getTokenName().equals(TokenName.COMMA) && !currentToken.getTokenName().equals(TokenName.LEFTBRACE)) {
+            switch (currentToken.getTokenName()) {
+                case OPGREAT:
+                case OPLESS:
+                case OPGREQ:
+                case OPLEQ:
+                case OPNOT:
+                case OPEQUAL:
+                    expressionInput.offerLast(makeNode(currentToken));
+                    ADVANCE();
+                    break;
+                case LOGICNOT:
+                case AFFIRM:
+                case NEGATE:
+                    while (unmatchedLeftPar != 0) {
+                        expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+                        unmatchedLeftPar--;
+                    }
+                    unmatchedLeftPar = 0;
+                    LOGICAL_EXPRESSION = LOGICAL_EXPRESSION().root;
+                    expressionInput.offerLast(LOGICAL_EXPRESSION);
+
+                    if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) {
+                        expressionInput.offerLast(makeNode(overReadToken));
+                    }
+                    break;
+                case DIFF:
+                case CONSINT:
+                case CONSFLOAT:
+                    while (unmatchedLeftPar != 0) {
+                        expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+                        unmatchedLeftPar--;
+                    }
+                    unmatchedLeftPar = 0;
+                    ARITHMETIC_EXPRESSION = ARITHMETIC_EXPRESSION().root;
+                    expressionInput.offerLast(ARITHMETIC_EXPRESSION);
+
+                    if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) {
+                        expressionInput.offerLast(makeNode(overReadToken));
+                    }
+                    break;
+                case LEFTPAR:
+                    unmatchedLeftPar++;
+                    ADVANCE();
+                    break;
+                case IDENTIFIER:
+                    while (unmatchedLeftPar != 0) {
+                        expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+                        unmatchedLeftPar--;
+                    }
+                    unmatchedLeftPar = 0;
+                    try {
+                        type = lex.SymbolTable.get(currentToken.getLexeme()).getDataType();
+                    } catch (Exception e) {
+                        ERROR = ERROR(TokenName.IDENTIFIER_NOT_DECLARED, currentToken, currentToken.getLineNumber());
+                        System.exit(0);
+                    }
+                    switch (type) {
+
+                        case INTEGER:
+                        case FLOATING_POINT:
+                            ARITHMETIC_EXPRESSION = ARITHMETIC_EXPRESSION().root;
+                            expressionInput.offerLast(ARITHMETIC_EXPRESSION);
+
+                            if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) {
+                                expressionInput.offerLast(makeNode(overReadToken));
+                            }
+                            break;
+                        case BOOLEAN:
+                            LOGICAL_EXPRESSION = LOGICAL_EXPRESSION().root;
+                            expressionInput.offerLast(LOGICAL_EXPRESSION);
+
+                            if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) {
+                                expressionInput.offerLast(makeNode(overReadToken));
+                            }
+                            break;
+                        default:
+                            ERROR = ERROR(TokenName.DATA_TYPE_MISMATCH, currentToken, currentToken.getLineNumber());
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        expressionInput.offerLast(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
+        expressionStack.push(new ParseTreeNode(new Token(TokenName.DOLLAR_OPERATOR, null, null, null, null, 0), null, null));
+
+        while (!expressionInput.isEmpty()) {
+            if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DEFAULT) && expressionInput.size() > 0) {
+                expressionInput.removeFirst();
+            } else if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && !operandStack.isEmpty()) {
+                EXPRESSION_NODE = new ParseTreeNode(new Token(TokenName.RELATIONAL_EXPRESSION, null, null, null, null, 0), null, null);
+                EXPRESSION_NODE.setFirstChild(operandStack.pop());
+                EXPRESSION.setRoot(EXPRESSION_NODE);
+                return EXPRESSION;
+            } else if (precedenceTable.evaluatePrecedenceRelational(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.LESSER)) {
+                expressionStack.push(expressionInput.removeFirst());
+            } else if (expressionInput.peekFirst().getToken().getTokenName().equals(TokenName.RIGHTPAR) && expressionInput.peekLast().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.peek().getToken().getTokenName().equals(TokenName.DOLLAR_OPERATOR) && expressionStack.size() == 1) {
+                EXPRESSION_NODE = new ParseTreeNode(new Token(TokenName.RELATIONAL_EXPRESSION, null, null, null, null, 0), null, null);
+                overReadToken = expressionInput.removeFirst().getToken();
+                EXPRESSION_NODE.setFirstChild(operandStack.pop());
+                EXPRESSION.setRoot(EXPRESSION_NODE);
+                return EXPRESSION;
+            } else if (precedenceTable.evaluatePrecedenceRelational(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.GREATER)) {
+                holder = expressionStack.pop();
+                if (holder.getToken().getTokenName().equals(TokenName.ARITHMETIC_EXPRESSION) || holder.getToken().getTokenName().equals(TokenName.LOGICAL_EXPRESSION)) {
+                    operandStack.push(holder);
+                } else {
+                    secondOperand = operandStack.pop();
+                    firstOperand = operandStack.pop();
+                    holder.setChildAndSibling(firstOperand, secondOperand);
+                    operandStack.push(holder);
+                }
+            } else if (precedenceTable.evaluatePrecedenceRelational(expressionStack.peek().getToken().getTokenName(), expressionInput.peekFirst().getToken().getTokenName()).equals(OperatorPrecedence.EQUAL)) {
+                expressionStack.pop();
+                expressionInput.removeFirst();
             }
         }
 
