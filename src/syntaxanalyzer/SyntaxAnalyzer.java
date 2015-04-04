@@ -1179,14 +1179,16 @@ public class SyntaxAnalyzer {
         if (currentToken.getTokenName().equals(TokenName.IF)) {
             IF = makeNode(currentToken);
             ADVANCE();
+            
             if (currentToken.getTokenName().equals(TokenName.LEFTPAR)) {
                 LEFTPAR = makeNode(currentToken);
                 ADVANCE();
+                
                 // Build/Create a grammar and code for Reg Exp
                 RegExp = RELATIONAL_EXPRESSION();
                 // ADVANCE();
                 if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) {
-                    RIGHTPAR = makeNode(currentToken);
+                    RIGHTPAR = makeNode(overReadToken);
                     //ADVANCE();
                     if (currentToken.getTokenName().equals(TokenName.LEFTBRACE)) {
                         LEFTBRACE = makeNode(currentToken);
@@ -1288,7 +1290,7 @@ public class SyntaxAnalyzer {
                 //ADVANCE();
                 RegExp = RELATIONAL_EXPRESSION();
                 if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) {
-                    RIGHTPAR = makeNode(currentToken);
+                    RIGHTPAR = makeNode(overReadToken);
                     //ADVANCE();
                     if (currentToken.getTokenName().equals(TokenName.LEFTBRACE)) {
                         LEFTBRACE = makeNode(currentToken);
@@ -1434,7 +1436,7 @@ public class SyntaxAnalyzer {
                 RegExp = RELATIONAL_EXPRESSION();
                 // ADVANCE();
                 if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) {
-                    RIGHTPAR = makeNode(currentToken);
+                    RIGHTPAR = makeNode(overReadToken);
                     //ADVANCE();
                     if (currentToken.getTokenName().equals(TokenName.LEFTBRACE)) {
                         LEFTBRACE = makeNode(currentToken);
@@ -1526,7 +1528,7 @@ public class SyntaxAnalyzer {
                             RegExp = RELATIONAL_EXPRESSION();
                             // ADVANCE();
                             if (overReadToken.getTokenName().equals(TokenName.RIGHTPAR)) {
-                                RIGHTPAR = makeNode(currentToken);
+                                RIGHTPAR = makeNode(overReadToken);
                                 if (currentToken.getTokenName().equals(TokenName.EOL)) {
                                     EOL = makeNode(currentToken);
                                 } else {
@@ -2065,6 +2067,9 @@ public class SyntaxAnalyzer {
             } else {
                 expressionInput.offerLast(makeNode(currentToken));
                 ADVANCE();
+                if (currentToken.getTokenName().equals(TokenName.LEFTBRACE)) {
+                    break;
+                }
             }
         }
 
@@ -2242,6 +2247,7 @@ public class SyntaxAnalyzer {
                         unmatchedLeftPar--;
                     }
                     unmatchedLeftPar = 0;
+                    
                     ARITHMETIC_EXPRESSION = ARITHMETIC_EXPRESSION().root;
                     expressionInput.offerLast(ARITHMETIC_EXPRESSION);
 
