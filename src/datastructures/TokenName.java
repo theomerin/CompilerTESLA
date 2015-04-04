@@ -109,7 +109,7 @@ public enum TokenName {
     
     //decimal constant
     CONSFLOAT, NEGFLOAT,
-    DEC_INIT_PRIME, DEC_INIT, DEC_ASSIGN,
+    DEC_INIT_PRIME, DEC_INIT,
     //------//
     
     //character constant
@@ -127,19 +127,29 @@ public enum TokenName {
     BOOL_INIT_PRIME, BOOL_INIT, BOOL_ASSIGN, BOOL_VALUE, CONSBOOL,
     //------//
     
-    //statement - numeric value 
-    NUMERIC_VALUE_NODE,
-    CAST_STMT,CAST_STMT_PRIME,
-    INC_PRE_STMT, DEC_PRE_STMT, 
-    INC_POST_STMT, DEC_POST_STMT,
+    //statement
+    CAST_STMT_PRIME,
+    CAST_INC_DEC_STMT,
+    CAST_INC_DEC,
+    CAST_STMT,
+    INC_PRE_STMT, DEC_PRE_STMT,
     //------//
    
     //IF statement block
     IF_STMT_PRIME,
     ELSEIF_STMT,
     ELSE_STMT,
+    END_IF_STMT,
     //------//
     
-    INPUT, OUTPUT, DURING_STMT, END_IF_STMT, EXECUTE_STMT,
+    //Loop statement
+    DURING_STMT, 
+    EXECUTE_STMT,
+    //------//
+    
+    
+    OUTPUT,
+    INPUT,
+     
     
 }
