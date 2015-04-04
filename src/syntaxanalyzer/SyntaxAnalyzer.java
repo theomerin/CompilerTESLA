@@ -43,11 +43,11 @@ public class SyntaxAnalyzer {
 
     public ParseTree PROGRAM() throws IOException {
         ParseTreeNode PROGRAM_NODE = new ParseTreeNode(new Token(TokenName.PROGRAM_ROOT, null, null, null, null, 0), null, null);
-        ParseTreeNode ENGAGE = new ParseTreeNode();;
-        ParseTreeNode LEFTBRACKET = new ParseTreeNode();;
-        ParseTreeNode PROGRAMNAME = new ParseTreeNode();;
-        ParseTreeNode RIGHTBRACKET = new ParseTreeNode();;
-        ParseTreeNode TERMINATE = new ParseTreeNode();;
+        ParseTreeNode ENGAGE = new ParseTreeNode();
+        ParseTreeNode LEFTBRACKET = new ParseTreeNode();
+        ParseTreeNode PROGRAMNAME = new ParseTreeNode();
+        ParseTreeNode RIGHTBRACKET = new ParseTreeNode();
+        ParseTreeNode TERMINATE = new ParseTreeNode();
         ParseTree STATEMENTS = new ParseTree();
         ParseTree PROGRAM = new ParseTree();
         Token ERROR = new Token();
