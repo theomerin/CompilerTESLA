@@ -365,7 +365,7 @@ public class LexicalAnalyzer {
                     current = (char) pointer;
                     colNumber++;
                     if (current == '-') {
-                        state = 3;
+                        state = 5;
                         value = value + current;
                     } else {
                         ptr.unread(pointer);
@@ -2303,7 +2303,7 @@ public class LexicalAnalyzer {
         } else if ((char) pointer == '~') {
             tok = checkForComments();
             if (tok.getTokenName().equals(TokenName.SINGLE_COMMENT)) {
-                System.out.println();
+                //System.out.println();
             }
         } else if ((char) pointer == '#') {
             tok = checkForConcatOperator();
