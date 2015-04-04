@@ -1923,16 +1923,17 @@ public class SyntaxAnalyzer {
                     }
                 }
             }
+
+            expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
+            expressionInput.offerLast(NEGEXP_ROOT);
+            expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
+
         } else if (!currentToken.getTokenType().equals(TokenType.ARITHMETICOP)) {
             expressionInput.offerLast(firstOperand);
         }
-
-        expressionInput.offerLast(makeNode(new Token(TokenName.LEFTPAR, null, null, null, null, 0)));
-        expressionInput.offerLast(NEGEXP_ROOT);
-        expressionInput.offerLast(makeNode(new Token(TokenName.RIGHTPAR, null, null, null, null, 0)));
-
+        
         while (!currentToken.getTokenName().equals(TokenName.EOL) && !currentToken.getTokenName().equals(TokenName.COMMA) && !currentToken.getTokenType().equals(TokenType.RELOP)) {
-            if (currentToken.getTokenName().equals(TokenName.DIFF)) {
+            if (currentToken.getTokenName().equals(TokenName.DIFF) && !(expressionInput.getLast().getToken().getTokenName().equals(TokenName.CONSINT) || expressionInput.getLast().getToken().getTokenName().equals(TokenName.CONSFLOAT) || expressionInput.getLast().getToken().getTokenName().equals(TokenName.NEGFLOAT) || expressionInput.getLast().getToken().getTokenName().equals(TokenName.NEGINT) || expressionInput.getLast().getToken().getTokenName().equals(TokenName.POSTINC) || expressionInput.getLast().getToken().getTokenName().equals(TokenName.POSTDEC) || expressionInput.getLast().getToken().getTokenName().equals(TokenName.PREINC) || expressionInput.getLast().getToken().getTokenName().equals(TokenName.PREDEC))) {
                 firstOperand = makeNode(currentToken);
                 ADVANCE();
                 if (currentToken.getTokenName().equals(TokenName.IDENTIFIER) || currentToken.getTokenName().equals(TokenName.CONSINT) || currentToken.getTokenName().equals(TokenName.CONSFLOAT)) {
@@ -1975,7 +1976,7 @@ public class SyntaxAnalyzer {
                     expressionInput.offerLast(makeNode(currentToken));
                     ADVANCE();
                 }
-            } else if (currentToken.getTokenType().equals(TokenType.ARITHMETICOP)) {
+            } else if (currentToken.getTokenType().equals(TokenType.ARITHMETICOP) && !(currentToken.getTokenName().equals(TokenName.INC) || currentToken.getTokenName().equals(TokenName.DEC))) {
                 holder = makeNode(currentToken);
                 ADVANCE();
                 if (currentToken.getTokenName().equals(TokenName.DIFF)) {
